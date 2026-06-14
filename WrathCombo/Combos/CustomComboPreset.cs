@@ -992,7 +992,7 @@ public enum Preset
 
     [AutoAction(false, true)]
     [ReplaceSkill(AST.Benefic)]
-    [ConflictingCombos(AST_ST_Heals, AST_Retargets_Benefic)]
+    [ConflictingCombos(AST_ST_Heals)]
     [JobInfo(Job.AST)]
     [SimpleCombo]
     [PossiblyRetargeted]
@@ -1166,7 +1166,7 @@ public enum Preset
 
     [AutoAction(false, true)]
     [ReplaceSkill(AST.Benefic)]
-    [ConflictingCombos(AST_Simple_ST_Heals, AST_Retargets_Benefic)]
+    [ConflictingCombos(AST_Simple_ST_Heals)]
     [JobInfo(Job.AST)]
     [PossiblyRetargeted(AST.Benefic2)]
     [HealingCombo]
@@ -1342,7 +1342,6 @@ public enum Preset
     [ReplaceSkill(AST.Benefic, AST.Benefic2)]
     [JobInfo(Job.AST)]
     [Retargeted(AST.Benefic, AST.Benefic2)]
-    [ConflictingCombos(AST_Simple_ST_Heals, AST_ST_Heals)]
     AST_Retargets_Benefic = 1086,
 
     [ParentCombo(AST_Retargets)]
@@ -5604,7 +5603,7 @@ public enum Preset
 
     [AutoAction(false, true)]
     [ReplaceSkill(SGE.Diagnosis)]
-    [ConflictingCombos(SGE_ST_Heal, SGE_Retarget_Diagnosis)]
+    [ConflictingCombos(SGE_ST_Heal)]
     [JobInfo(Job.SGE)]
     [SimpleCombo]
     [PossiblyRetargeted]
@@ -5726,7 +5725,7 @@ public enum Preset
 
     [AutoAction(false, true)]
     [ReplaceSkill(SGE.Diagnosis)]
-    [ConflictingCombos(SGE_Simple_ST_Heal, SGE_Retarget_Diagnosis)]
+    [ConflictingCombos(SGE_Simple_ST_Heal)]
     [JobInfo(Job.SGE)]
     [PossiblyRetargeted(SGE.Diagnosis)]
     [HealingCombo]
@@ -5940,7 +5939,6 @@ public enum Preset
     [ParentCombo(SGE_Retarget)]
     [JobInfo(Job.SGE)]
     [Retargeted(SGE.Diagnosis)]
-    [ConflictingCombos(SGE_Simple_ST_Heal, SGE_ST_Heal)]
     SGE_Retarget_Diagnosis = 14079,
 
     [ParentCombo(SGE_Retarget)]
@@ -6395,7 +6393,7 @@ public enum Preset
 
     [AutoAction(false, true)]
     [ReplaceSkill(SCH.Physick)]
-    [ConflictingCombos(SCH_ST_Heal, SCH_Retarget_Physick)]
+    [ConflictingCombos(SCH_ST_Heal)]
     [JobInfo(Job.SCH)]
     [SimpleCombo]
     [PossiblyRetargeted]
@@ -6501,7 +6499,7 @@ public enum Preset
     #region  ST Healing
     [AutoAction(false, true)]
     [ReplaceSkill(SCH.Physick)]
-    [ConflictingCombos(SCH_Simple_ST_Heal, SCH_Retarget_Physick)]
+    [ConflictingCombos(SCH_Simple_ST_Heal)]
     [JobInfo(Job.SCH)]
     [PossiblyRetargeted(SCH.Physick)]
     [HealingCombo]
@@ -6716,7 +6714,6 @@ public enum Preset
     [ParentCombo(SCH_Retarget)]
     [JobInfo(Job.SCH)]
     [Retargeted(SCH.Physick)]
-    [ConflictingCombos(SCH_Simple_ST_Heal, SCH_ST_Heal)]
     SCH_Retarget_Physick = 16074,
 
     [ParentCombo(SCH_Retarget)]

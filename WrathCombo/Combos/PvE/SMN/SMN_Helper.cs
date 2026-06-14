@@ -8,7 +8,7 @@ using WrathCombo.CustomComboNS;
 using WrathCombo.CustomComboNS.Functions;
 using static WrathCombo.Combos.PvE.SMN.Config;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
-using AetherFlags = Dalamud.Game.ClientState.JobGauge.Enums.AetherFlags;
+// API12: AetherFlags is game-7.5 only; alias dropped. Phoenix/SolarBahamut readiness will be wrong on TC 7.1.
 namespace WrathCombo.Combos.PvE;
 
 internal partial class SMN
@@ -165,8 +165,9 @@ internal partial class SMN
     internal static bool IsAttunedAny => IsIfritAttuned || IsTitanAttuned || IsGarudaAttuned;
     internal static bool IsDreadwyrmTranceReady => !LevelChecked(SummonBahamut) && IsBahamutReady;
     internal static bool IsBahamutReady => !IsPhoenixReady && !IsSolarBahamutReady;
-    internal static bool IsPhoenixReady => Gauge.AetherFlags.HasFlag((AetherFlags)4) && !Gauge.AetherFlags.HasFlag((AetherFlags)8);
-    internal static bool IsSolarBahamutReady => Gauge.AetherFlags.HasFlag((AetherFlags)8) || Gauge.AetherFlags.HasFlag((AetherFlags)12);
+    // B1: AetherFlags is game-7.5; on TC 7.1 these always return false (never use Phoenix/SolarBahamut path).
+    internal static bool IsPhoenixReady => false;
+    internal static bool IsSolarBahamutReady => false;
     internal static bool DemiExists => CurrentDemiSummon is not DemiSummon.None;
     internal static bool DemiNone => CurrentDemiSummon is DemiSummon.None;
     internal static bool DemiNotPheonix => CurrentDemiSummon is not DemiSummon.Phoenix;

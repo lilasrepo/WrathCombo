@@ -29,14 +29,12 @@ using WrathCombo.CustomComboNS;
 using WrathCombo.CustomComboNS.Functions;
 using WrathCombo.Data;
 using WrathCombo.Data.Conflicts;
-using WrathCombo.Extensions;
 using WrathCombo.Resources.Localization.UI.MainWindow;
 using WrathCombo.Services;
 using WrathCombo.Services.ActionRequestIPC;
 using WrathCombo.Services.IPC;
 using WrathCombo.Services.IPC_Subscriber;
 using WrathCombo.Window;
-using WrathCombo.Window.Functions;
 using WrathCombo.Window.Tabs;
 using GenericHelpers = ECommons.GenericHelpers;
 
@@ -226,7 +224,7 @@ public sealed partial class WrathCombo : IDalamudPlugin
         RegisterCommands();
 
         DtrBarEntry ??= Svc.DtrBar.Get("Wrath Combo");
-        DtrBarEntry.OnClick = (_) =>
+        DtrBarEntry.OnClick = () =>
         {
             ToggleAutoRotation(!Service.Configuration.RotationConfig.Enabled);
         };
@@ -235,19 +233,6 @@ public sealed partial class WrathCombo : IDalamudPlugin
         new TextPayload("Disable this icon in /xlsettings -> Server Info Bar"));
 
         OpenerDtr ??= Svc.DtrBar.Get("Wrath Combo Opener");
-
-        OpenerDtr.OnClick += (_) =>
-        {
-            var preset = WrathOpener.CurrentOpener?.Preset;
-            if (preset is not { } pre)
-                return;
-
-            PresetStorage.TogglePreset(pre);
-        };
-
-        OpenerDtr.Tooltip = new SeString(
-        new TextPayload("Click to toggle Opener Preset.\n"),
-        new TextPayload("Disable this icon in /xlsettings -> Server Info Bar"));
 
         Svc.ClientState.Login += PrintLoginMessage;
         if (Svc.ClientState.IsLoggedIn) ResetFeatures();
@@ -265,6 +250,7 @@ public sealed partial class WrathCombo : IDalamudPlugin
 #if DEBUG
         VfxManager.Logging = true;
         ConfigWindow.IsOpen = true;
+        VfxManager.Logging = true;
         Svc.Framework.RunOnTick(() =>
         {
             if (Service.Configuration.OpenToCurrentJob && Player.Available)
@@ -316,7 +302,7 @@ public sealed partial class WrathCombo : IDalamudPlugin
         }
     }
 
-    private void ClientState_TerritoryChanged(uint obj)
+    private void ClientState_TerritoryChanged(ushort obj)
     {
         UpdateCaches(false, true, false);
 
@@ -364,25 +350,29 @@ public sealed partial class WrathCombo : IDalamudPlugin
 
             #endregion
 
-            #region DTR Bar Updating
+            // Skip the IPC checking if hidden
+            if (!DtrBarEntry.UserHidden)
+            {
+                #region DTR Bar Updating
 
-            var autoOn = IPC.GetAutoRotationState();
-            var icon = new IconPayload(autoOn
-                ? BitmapFontIcon.SwordUnsheathed
-                : BitmapFontIcon.SwordSheathed);
+                var autoOn = IPC.GetAutoRotationState();
+                var icon = new IconPayload(autoOn
+                    ? BitmapFontIcon.SwordUnsheathed
+                    : BitmapFontIcon.SwordSheathed);
 
-            var text = autoOn ? ": On" : ": Off";
-            if (!Service.Configuration.ShortDTRText && autoOn)
-                text += $" ({P.IPCSearch.ActiveJobPresets} active)";
-            var ipcControlledText =
-                P.UIHelper.AutoRotationStateControlled() is not null
-                    ? " (Locked)"
-                    : "";
+                var text = autoOn ? ": On" : ": Off";
+                if (!Service.Configuration.ShortDTRText && autoOn)
+                    text += $" ({P.IPCSearch.ActiveJobPresets} active)";
+                var ipcControlledText =
+                    P.UIHelper.AutoRotationStateControlled() is not null
+                        ? " (Locked)"
+                        : "";
 
-            var payloadText = new TextPayload(text + ipcControlledText);
-            DtrBarEntry.Text = new SeString(icon, payloadText);
+                var payloadText = new TextPayload(text + ipcControlledText);
+                DtrBarEntry.Text = new SeString(icon, payloadText);
 
-            #endregion
+                #endregion
+            }
 
             if (Service.Configuration.ShowOpenerDtr)
             {

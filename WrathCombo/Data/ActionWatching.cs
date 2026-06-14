@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Hooking;
 using ECommons;
@@ -149,7 +149,7 @@ public static class ActionWatching
                     var effType = eff.Type;
                     var effValue = eff.Value;
                     var effObjectId = eff.AtSource ? casterEntityId : targetId;
-                    var dataId = Svc.Objects.FirstOrDefault(x => x.GameObjectId == effObjectId)?.BaseId;
+                    var dataId = Svc.Objects.FirstOrDefault(x => x.GameObjectId == effObjectId)?.DataId;
 
 #if DEBUG
                     Svc.Log.Verbose(
@@ -380,9 +380,9 @@ public static class ActionWatching
             if (recastGroupDetail == null) return null;
 
             var additionalRecastGroupDetail = actionManager->GetRecastGroupDetail(actionManager->GetAdditionalRecastGroup((ActionType)actionType, actionID));
-            var additionalRecastRemaining = additionalRecastGroupDetail != null && additionalRecastGroupDetail->IsActive ? additionalRecastGroupDetail->Total - additionalRecastGroupDetail->Elapsed : 0;
+            var additionalRecastRemaining = additionalRecastGroupDetail != null && additionalRecastGroupDetail->IsActive != 0 ? additionalRecastGroupDetail->Total - additionalRecastGroupDetail->Elapsed : 0;
 
-            if (!recastGroupDetail->IsActive) return additionalRecastRemaining;
+            if (recastGroupDetail->IsActive == 0) return additionalRecastRemaining;
 
             var charges = actionType == 1 ? ActionManager.GetMaxCharges(actionID, Player.MaxLevel) : 1;
             var recastRemaining = recastGroupDetail->Total / charges - recastGroupDetail->Elapsed;

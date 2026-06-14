@@ -52,7 +52,7 @@ public static class ActionRequestDebugUI
                         if(filter != "" && !ExcelActionHelper.GetActionName(x, true).Contains(filter, StringComparison.OrdinalIgnoreCase)) continue;
                         if(ThreadLoadImageHandler.TryGetIconTextureWrap(x.Icon,false, out var tex))
                         {
-                            ImGui.Image(tex.Handle, new(ImGui.GetTextLineHeight()));
+                            ImGui.Image(tex.ImGuiHandle, new(ImGui.GetTextLineHeight()));
                             ImGui.SameLine();
                         }
                         if(ImGui.Selectable($"{ExcelActionHelper.GetActionName(x, true)}", selectedAction == x.RowId))
@@ -66,7 +66,8 @@ public static class ActionRequestDebugUI
             }, () =>
             {
                 ImGui.SetNextItemWidth(150f.Scale());
-                ImGuiEx.FilteringInputInt("Time", out var time);
+                int time = 0;
+                ImGui.InputInt("Time", ref time);
                 ImGui.SameLine();
                 if(ImGuiEx.IconButtonWithText(Dalamud.Interface.FontAwesomeIcon.Check, "Place request"))
                 {
@@ -85,7 +86,7 @@ public static class ActionRequestDebugUI
                         var data = new RowRef<Action>(Svc.Data.Excel, x.Descriptor.ActionID);
                         if(data.IsValid && ThreadLoadImageHandler.TryGetIconTextureWrap(data.Value.Icon, false, out var tex))
                         {
-                            ImGui.Image(tex.Handle, new(ImGui.GetFrameHeight()));
+                            ImGui.Image(tex.ImGuiHandle, new(ImGui.GetFrameHeight()));
                             ImGui.SameLine();
                         }
                         ImGuiEx.TextV($"{ExcelActionHelper.GetActionName(x.Descriptor.ActionID, true)}");

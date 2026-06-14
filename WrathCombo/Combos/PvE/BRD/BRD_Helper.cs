@@ -1,4 +1,4 @@
-﻿#region Dependencies
+#region Dependencies
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -37,12 +37,12 @@ internal partial class BRD
     internal static BRDGauge? gauge = GetJobGauge<BRDGauge>();
     internal static int SongTimerInSeconds => gauge.SongTimer / 1000;
     internal static bool SongNone => gauge.Song == Song.None;
-    internal static bool SongWanderer => gauge.Song == Song.WanderersMinuet;
-    internal static bool SongMage => gauge.Song == Song.MagesBallad;
-    internal static bool SongArmy => gauge.Song == Song.ArmysPaeon;
+    internal static bool SongWanderer => gauge.Song == Song.Wanderer;
+    internal static bool SongMage => gauge.Song == Song.Mage;
+    internal static bool SongArmy => gauge.Song == Song.Army;
     //Dot Management
-    internal static IStatus? Purple => GetStatusEffect(Debuffs.CausticBite, CurrentTarget) ?? GetStatusEffect(Debuffs.VenomousBite, CurrentTarget);
-    internal static IStatus? Blue => GetStatusEffect(Debuffs.Stormbite, CurrentTarget) ?? GetStatusEffect(Debuffs.Windbite, CurrentTarget);
+    internal static Status? Purple => GetStatusEffect(Debuffs.CausticBite, CurrentTarget) ?? GetStatusEffect(Debuffs.VenomousBite, CurrentTarget);
+    internal static Status? Blue => GetStatusEffect(Debuffs.Stormbite, CurrentTarget) ?? GetStatusEffect(Debuffs.Windbite, CurrentTarget);
     internal static float PurpleRemaining => Purple?.RemainingTime ?? 0;
     internal static float BlueRemaining => Blue?.RemainingTime ?? 0;
     internal static bool DebuffCapCanPurple => CanApplyStatus(CurrentTarget, Debuffs.CausticBite) || CanApplyStatus(CurrentTarget, Debuffs.VenomousBite);

@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -18,7 +18,8 @@ using WrathCombo.Data;
 using WrathCombo.Extensions;
 using static WrathCombo.Combos.PvE.AST.Config;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
-using Status = Dalamud.Game.ClientState.Statuses.IStatus;
+// API12: disambiguate Status (Dalamud status-effect class vs Lumina.Excel.Sheets.Status row type).
+using Status = Dalamud.Game.ClientState.Statuses.Status;
 namespace WrathCombo.Combos.PvE;
 
 internal partial class AST

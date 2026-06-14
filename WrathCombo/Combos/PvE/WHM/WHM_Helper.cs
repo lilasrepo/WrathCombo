@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using Dalamud.Game.ClientState.JobGauge.Types;
@@ -69,8 +69,8 @@ internal partial class WHM
                            WHM_STHeals_IncludeShields);
         float refreshTime = WHM_STHeals_RegenTimer;
         bool tankCheck = healTarget.IsInParty() && healTarget.Role is CombatRole.Tank;
-        IStatus? regenHoT = GetStatusEffect(Buffs.Regen, healTarget);
-        IStatus? BenisonShield = GetStatusEffect(Buffs.DivineBenison, healTarget);
+        Status? regenHoT = GetStatusEffect(Buffs.Regen, healTarget);
+        Status? BenisonShield = GetStatusEffect(Buffs.DivineBenison, healTarget);
 
         switch (i)
         {

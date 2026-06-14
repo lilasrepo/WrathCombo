@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using WrathCombo.Combos.PvE;
 using WrathCombo.CustomComboNS;
 using WrathCombo.CustomComboNS.Functions;
@@ -128,7 +128,7 @@ internal static class RDMPvP
             bool isMoving = IsMoving();
             bool inCombat = InCombat();
             bool hasTarget = HasTarget();
-            bool isTargetNPC = CurrentTarget is IBattleNpc && CurrentTarget.BaseId != 8016;
+            bool isTargetNPC = CurrentTarget is IBattleNpc && CurrentTarget.DataId != 8016;
             bool hasBind = HasStatusEffect(PvPCommon.Debuffs.Bind, anyOwner: true);
             bool isCorpsAvailable = chargesCorps > 0 && !hasBind;
             bool hasScorch = OriginalHook(EnchantedRiposte) is Scorch;

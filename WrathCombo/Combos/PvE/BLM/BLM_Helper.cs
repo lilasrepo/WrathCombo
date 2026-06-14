@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
+using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Statuses;
 using ECommons.GameHelpers;
 using System.Collections.Frozen;
@@ -71,17 +71,14 @@ internal partial class BLM
     private static bool EndOfIcePhaseAoE =>
         IcePhase && HasMaxUmbralHeartStacks && TraitLevelChecked(Traits.EnhancedAstralFire);
 
-    private static bool JustUsedFreezeOrBlizzard =>
-        JustUsed(Freeze, GCD) || JustUsed(Blizzard4, GCD);
-
     #endregion
 
     #region Thunder
 
-    private static IStatus? ThunderDebuffST =>
+    private static Status? ThunderDebuffST =>
         GetStatusEffect(ThunderList[OriginalHook(Thunder)], CurrentTarget);
 
-    private static IStatus? ThunderDebuffAoE =>
+    private static Status? ThunderDebuffAoE =>
         GetStatusEffect(ThunderList[OriginalHook(Thunder2)], CurrentTarget);
 
     internal static bool CanUseThunder()

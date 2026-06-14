@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.JobGauge.Types;
+using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Statuses;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -297,7 +297,7 @@ internal partial class DRG
     private static float GCD =>
         GetCooldown(OriginalHook(TrueThrust)).CooldownTotal;
 
-    private static IStatus? ChaosDebuff =>
+    private static Status? ChaosDebuff =>
         GetStatusEffect(ChaoticList[OriginalHook(ChaosThrust)], CurrentTarget);
 
     private static bool CanLanceCharge =>

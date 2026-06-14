@@ -17,7 +17,7 @@
     <!-- Build Parameters -->
     <PropertyGroup>
         <AssemblyName>WrathCombo</AssemblyName>
-        <TargetFramework>net10.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <Configurations>Debug;Release</Configurations>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <NoWarn>CS1591</NoWarn>
@@ -37,20 +37,20 @@
 
     <!-- Required Paths -->
     <PropertyGroup>
-        <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
         <DalamudDevPlugins>$(appdata)\XIVLauncher\devPlugins\WrathCombo\</DalamudDevPlugins>
         <DalamudPluginPath>$(appdata)\XIVLauncher\installedPlugins\WrathCombo\$(version)</DalamudPluginPath>
     </PropertyGroup>
 
     <!-- Path Overrides for Linux -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DalamudLibPath>$(HOME)/.xlcore/dalamud/Hooks/dev/</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
         <DalamudDevPlugins>$(HOME)/.xlcore/devPlugins/</DalamudDevPlugins>
     </PropertyGroup>
 
     <!-- Path Overrides for Mac -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <DalamudLibPath>$(HOME)/Library/Application Support/XIV on Mac/dalamud/Hooks/dev/</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
         <DalamudDevPlugins>$(HOME)/Library/Application Support/XIV on Mac/devPlugins/</DalamudDevPlugins>
     </PropertyGroup>
 
@@ -71,7 +71,7 @@
 
     <!-- Dalamud Packaging -->
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="15.0.0" />
+        <PackageReference Include="DalamudPackager" Version="2.1.13" />
         <PackageReference Include="System.Speech" Version="10.0.5" />
     </ItemGroup>
 
@@ -101,19 +101,11 @@
         </Reference>
 
         <Reference Include="Dalamud.Bindings.ImGui">
-            <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImGui.dll</HintPath>
+            <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
             <Private>False</Private>
         </Reference>
 
-        <Reference Include="Dalamud.Bindings.ImPlot">
-            <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImPlot.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
 
-        <Reference Include="Dalamud.Bindings.ImGuizmo">
-            <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImGuizmo.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
 
         <Reference Include="Lumina">
             <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>

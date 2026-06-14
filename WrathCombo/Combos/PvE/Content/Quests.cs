@@ -53,7 +53,7 @@ public class Quests
         var target = Target.IfFriendly() ?? HealTarget;
 
         if (Player.Level > 29 &&
-            target is { ObjectKind: ObjectKind.EventNpc, BaseId: 1008174 })
+            target is { ObjectKind: ObjectKind.EventNpc, DataId: 1008174 })
         {
             actionID = WHM.Cure;
             return true;

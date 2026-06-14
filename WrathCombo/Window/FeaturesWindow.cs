@@ -1,4 +1,4 @@
-#region
+﻿#region
 
 using Dalamud.Interface.Utility.Raii;
 using ECommons.DalamudServices;
@@ -126,7 +126,7 @@ internal class FeaturesWindow : ConfigWindow
         {
             if (imgPadSize > 0)
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + imgPadSize);
-            ImGui.Image(icon.Handle, imgSize);
+            ImGui.Image(icon.ImGuiHandle, imgSize);
         }
         else
         {

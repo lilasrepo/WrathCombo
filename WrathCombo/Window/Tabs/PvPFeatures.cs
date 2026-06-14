@@ -122,7 +122,7 @@ internal class PvPFeatures : FeaturesWindow
                                 var padSize = (IconMaxSize - imgSize.X) / 2f;
                                 if (padSize > 0)
                                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padSize);
-                                ImGui.Image(icon.Handle, imgSize);
+                                ImGui.Image(icon.ImGuiHandle, imgSize);
                             }
                             else
                             {
@@ -130,7 +130,7 @@ internal class PvPFeatures : FeaturesWindow
                             }
                             ImGui.SameLine(LargerIndentWidth);
                             ImGuiEx.Spacing(new Vector2(0, VerticalCenteringPadding));
-                            ImGui.TextWrapped($"{header} {(disabled.Count > 0 ? FeaturesUI.Warning_DisabledDueToUpdate : "")}");
+                            ImGui.TextWrapped($"{header} {(DisabledJobsPVP.Any(x => x == id) ? FeaturesUI.Warning_DisabledDueToUpdate : "")}");
                         }
 
                         ImGui.TableNextColumn();

@@ -12,6 +12,9 @@ using System.Linq;
 using WrathCombo.Data;
 using WrathCombo.Extensions;
 using WrathCombo.Services;
+// API12 Status disambiguation: alias to Dalamud's Status (status-effect class), not FFXIVClientStructs.Status struct or Lumina.Excel.Sheets.Status row.
+using Status = Dalamud.Game.ClientState.Statuses.Status;
+using Lumina.Excel.Sheets;
 
 namespace WrathCombo.CustomComboNS.Functions;
 
@@ -24,7 +27,7 @@ internal abstract partial class CustomComboFunctions
     /// <param name="anyOwner">Check if the Player owns/created the status, true means anyone owns</param>
     /// <param name="target">Optional target</param>
     /// <returns>Status object or null.</returns>
-    public static IStatus? GetStatusEffect(ushort statusId, IGameObject? target = null, bool anyOwner = false)
+    public static Status? GetStatusEffect(ushort statusId, IGameObject? target = null, bool anyOwner = false)
     {
         // Default to LocalPlayer if no target/bad target
         target ??= LocalPlayer;
@@ -57,7 +60,7 @@ internal abstract partial class CustomComboFunctions
     /// <param name="anyOwner">Check if the Player owns/created the status, true means anyone owns</param>
     /// <param name="status">Retrieved Status object</param>
     /// <returns>Boolean if the status effect exists or not</returns>
-    public static bool HasStatusEffect(ushort statusId, out IStatus? status, IGameObject? target = null, bool anyOwner = false)
+    public static bool HasStatusEffect(ushort statusId, out Status? status, IGameObject? target = null, bool anyOwner = false)
     {
         target ??= LocalPlayer;
         status = GetStatusEffect(statusId, target, anyOwner);
@@ -89,7 +92,7 @@ internal abstract partial class CustomComboFunctions
     /// </summary>
     /// <param name="effect">Dalamud Status object</param>
     /// <returns>Float representing remaining status effect time</returns>
-    public unsafe static float GetStatusEffectRemainingTime(IStatus? effect)
+    public unsafe static float GetStatusEffectRemainingTime(Status? effect)
     {
         if (effect is null) return 0;
         if (effect.RemainingTime < 0) return (effect.RemainingTime * -1) + ActionManager.Instance()->AnimationLock;
@@ -124,7 +127,7 @@ internal abstract partial class CustomComboFunctions
     /// </summary>
     /// <param name="effect">Dalamud Status object</param>
     /// <returns>Integer representing status effect stack count</returns>
-    public static ushort GetStatusEffectStacks(IStatus? effect) => effect?.Param ?? 0;
+    public static ushort GetStatusEffectStacks(Status? effect) => effect?.Param ?? 0;
 
     /// <summary>
     /// Retrieves the status effect stack count
@@ -176,18 +179,32 @@ internal abstract partial class CustomComboFunctions
     /// </summary>
     public static unsafe bool PlayerHasActionPenalty()
     {
-        bool hasActionPenalty = false;
+        bool hasActionPenalty =
+            //Player.IsInDuty &&  <-?
+            Player.Status.Any(s =>
+                // Acceleration Bomb within Timeframe
+                (StatusCache.PausingStatuses.AccelerationBombs.Contains(s.StatusId) &&
+                    GetStatusEffectRemainingTime(s) is > 0f and < 1.5f) ||
 
-        // Quick Content Check First
-        switch (Content.TerritoryID)
+                // Pyretic
+                StatusCache.PausingStatuses.Pyretics.Contains(s.StatusId) ||
+
+                // Others
+                StatusCache.PausingStatuses.Misc.Contains(s.StatusId)
+
+            ) == true;
+
+        if (!hasActionPenalty)
         {
-            case 1345: // The Clyteum
+            // The Clyteum
+            if (Content.TerritoryID is 1345)
+            {
                 // The Eye of the Scorpion
                 // This finds the helper
                 var MotionScannerHelper = Svc.Objects.FirstOrDefault(x =>
-                    x.BaseId == 0x4C2D &&
-                    x.Address != 0 &&
-                    (int)(x.Struct()->RenderFlags) == 0 // There can be two of these objects, only one appears to be active.
+                  x.DataId == 0x4C2D &&
+                  x.Address != 0 &&
+                  (int)(x.Struct()->RenderFlags) == 0 // There can be two of these objects, only one appears to be active.
                 );
                 if (MotionScannerHelper is IGameObject scanner)
                 {
@@ -209,49 +226,23 @@ internal abstract partial class CustomComboFunctions
                     // then negative as it moves away, with the status dropping off at around -8y,
                     // but added a buffer just in case.
 
-                    hasActionPenalty = signedDistance switch
-                    {
-                        // Too far away
-                        > 12f => false,
-                        // 12y to -8y (about to be overtaken by the field to almost about to clear)
-                        > -8f => true,
-                        // -8y to -12y, waiting for status to clear, should happen close to -8y but added a buffer just in case
-                        > -12f => HasStatusEffect(5191, anyOwner: true),
-                        _ => false,
-                    };
+                    // Too far away
+                    if (signedDistance > 12f)
+                        hasActionPenalty = false;
+
+                    // 12y to -8y (about to be overtaken by the field to almost about to clear)
+                    else if (signedDistance > -8f)
+                        hasActionPenalty = true;
+
+                    // -8y to -12y, waiting for status to clear, should happen close to -8y but added a buffer just in case
+                    else if (signedDistance > -12f)
+                        hasActionPenalty = HasStatusEffect(5191, anyOwner: true);
+
+                    // -12y and beyond should be decently away from the player
+                    else
+                        hasActionPenalty = false;
                 }
-                break;
-
-            case 1368: // Windurst
-                if (Svc.Objects.Any(x => x.BaseId == 0x4D92 || x.BaseId == 0x4D96)) // Shinryu Paradox / Hollow King
-                {
-                    // Find VFX
-                    var effects = VfxManager.TrackedEffects
-                        .FilterToTarget(Player.Object.GameObjectId)
-                        .Where(x =>
-                            x.Path == "vfx/lockon/eff/z6r3_b4_lock_no_mv_7s_c0k2.avfx" ||  // Don't Move
-                            x.Path == "vfx/lockon/eff/z6r3_b4_lock_no_lk_7s_c0k2.avfx")    // Don't Look
-                        .ToList();
-
-                    if (effects.Count == 1) hasActionPenalty = MathHelper.InRange(effects[0].AgeSeconds, 4, 8);
-                }
-                break;
-
-            default:
-                hasActionPenalty =
-                    Player.Status.Any(s =>
-                        // Acceleration Bomb within Timeframe
-                        (StatusCache.PausingStatuses.AccelerationBombs.Contains(s.StatusId) &&
-                            GetStatusEffectRemainingTime(s) is > 0f and < 1.5f) ||
-
-                        // Pyretic
-                        StatusCache.PausingStatuses.Pyretics.Contains(s.StatusId) ||
-
-                        // Others
-                        StatusCache.PausingStatuses.Misc.Contains(s.StatusId)
-
-                    ) == true;
-                break;
+            }
         }
 
         if (hasActionPenalty)
@@ -279,18 +270,19 @@ internal abstract partial class CustomComboFunctions
 
         // Turn Target's status to uint hashset
         var targetStatuses = statuses.Select(s => s.StatusId).ToHashSet();
-        uint targetID = tar.BaseId;
+        uint targetID = tar.DataId;
 
         // Returning False in each case because there should be no other General Invincibility Check needed
         // for specified areas
         switch (Content.TerritoryID)
         {
             case 1045: // Ifrit Normal
-                return targetID == 207 && Svc.Objects.Any(x => x.BaseId == 208 && !x.IsDead);
+                // porting-note: API15 IGameObject.BaseId -> API12 DataId (NPC BNpc data id; same usage as other call sites)
+                return targetID == 207 && Svc.Objects.Any(x => x.DataId == 208 && !x.IsDead);
             case 292: // Ifrit Hard
-                return targetID == 209 && Svc.Objects.Any(x => x.BaseId == 210 && !x.IsDead);
+                return targetID == 209 && Svc.Objects.Any(x => x.DataId == 210 && !x.IsDead);
             case 295: // Ifrit Extreme
-                return targetID == 211 && Svc.Objects.Any(x => x.BaseId == 212 && !x.IsDead);
+                return targetID == 211 && Svc.Objects.Any(x => x.DataId == 212 && !x.IsDead);
             case 174: // Labyrinth of the Ancients
                 // Thanatos, Spooky Ghosts Only
                 if (targetID is 2350) return !HasStatusEffect(398);
@@ -377,7 +369,7 @@ internal abstract partial class CustomComboFunctions
 
             case 952: // Tower of Zot final bosses
                       // Technically not invincible, just need to ignore
-                if (targetID is (13298 or 13299) && Svc.Objects.Any(y => y.BaseId is 13297 && !y.IsDead))
+                if (targetID is (13298 or 13299) && Svc.Objects.Any(y => y.DataId is 13297 && !y.IsDead))
                     return true;
                 return false;
 

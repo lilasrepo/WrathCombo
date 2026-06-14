@@ -1,4 +1,14 @@
 <Project>
+    <!-- Duplicated from TC_forward\Directory.Build.props (this file shadows it): strip
+         the local source-root prefix out of shipped PDBs / runtime stack traces, and
+         stop SourceLink embedding the repo root + submodule SHAs into the PDB. -->
+    <PropertyGroup>
+        <Deterministic>true</Deterministic>
+        <PathMap>$(MSBuildThisFileDirectory)=/</PathMap>
+        <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+        <EnableSourceLink>false</EnableSourceLink>
+    </PropertyGroup>
+
     <PropertyGroup>
         <ECommonsLocalPath>..\..\ECommons\ECommons\ECommons.csproj</ECommonsLocalPath>
     </PropertyGroup>

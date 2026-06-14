@@ -17,7 +17,7 @@ using WrathCombo.AutoRotation;
 using WrathCombo.Combos.PvE;
 using WrathCombo.Extensions;
 using WrathCombo.Services;
-using BattleNpcSubKindCS = FFXIVClientStructs.FFXIV.Client.Game.Object.BattleNpcSubKind;
+// API12: FFXIVClientStructs.FFXIV.Client.Game.Object.BattleNpcSubKind doesn't exist; use Dalamud BattleNpcSubKind.Chocobo instead (line 87).
 namespace WrathCombo.CustomComboNS.Functions;
 
 internal abstract partial class CustomComboFunctions
@@ -84,7 +84,8 @@ internal abstract partial class CustomComboFunctions
             foreach (var npc in Svc.Objects.OfType<IBattleNpc>().Where(x => !existingIds.Contains(x.GameObjectId)))
             {
                 if (npc.BattleNpcKind is BattleNpcSubKind.Pet) continue; // Skips carbuncles, fairies etc.
-                if (npc.Struct()->BattleNpcSubKind is BattleNpcSubKindCS.Buddy  && npc.OwnerId != Player.GameObject->GetGameObjectId()) continue; // Skips other players' chocobos
+                // API12: use Dalamud's BattleNpcSubKind.Chocobo (CSStruct.Buddy equivalent).
+                if (npc.BattleNpcKind is BattleNpcSubKind.Chocobo && npc.OwnerId != Player.GameObject->GetGameObjectId()) continue; // Skips other players' chocobos
 
                 if (ActionManager.CanUseActionOnTarget(RoleActions.Healer.Esuna, npc.GameObject()))
                 {

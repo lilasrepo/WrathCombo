@@ -15,7 +15,7 @@ internal partial class MCH : PhysicalRanged
                 return actionID;
 
             //Reassemble to start before combat/after downtime
-            if (CanReassembleST() && !IsOverheated && !HasWeaved())
+            if (CanReassemble() && !IsOverheated && !HasWeaved())
                 return Reassemble;
 
             if (!IsOverheated &&
@@ -59,7 +59,7 @@ internal partial class MCH : PhysicalRanged
                 if (!IsOverheated)
                 {
                     // Reassemble
-                    if (CanReassembleST())
+                    if (CanReassemble())
                         return Reassemble;
 
                     // BarrelStabilizer
@@ -120,8 +120,9 @@ internal partial class MCH : PhysicalRanged
                 if (ComboAction is SplitShot && ActionReady(OriginalHook(SlugShot)))
                     return OriginalHook(SlugShot);
 
-                if (ComboAction is SlugShot && ActionReady(OriginalHook(CleanShot)) &&
-                    CanReassembleST())
+                if (ComboAction is SlugShot && !LevelChecked(Drill) &&
+                    LevelChecked(CleanShot) && !HasStatusEffect(Buffs.Reassembled) &&
+                    ActionReady(Reassemble))
                     return Reassemble;
 
                 if (ComboAction is SlugShot && ActionReady(OriginalHook(CleanShot)))
@@ -173,7 +174,9 @@ internal partial class MCH : PhysicalRanged
 
                 if (!IsOverheated)
                 {
-                    if (CanReassembleAoE())
+                    if (ActionReady(Reassemble) &&
+                        !HasStatusEffect(Buffs.Reassembled) &&
+                        CanUseReassembleAoE())
                         return Reassemble;
 
                     // BarrelStabilizer
@@ -247,7 +250,8 @@ internal partial class MCH : PhysicalRanged
 
             //Reassemble to start before combat/after downtime
             if (IsEnabled(Preset.MCH_ST_Adv_Reassemble) &&
-                CanReassembleST() && !IsOverheated && !HasWeaved())
+                CanReassemble() && !IsOverheated && !HasWeaved() &&
+                GetRemainingCharges(Reassemble) > MCH_ST_ReassemblePool)
                 return Reassemble;
 
             if (!IsOverheated &&
@@ -282,6 +286,7 @@ internal partial class MCH : PhysicalRanged
 
                 // Hypercharge
                 if (IsEnabled(Preset.MCH_ST_Adv_Hypercharge) &&
+                    GetTargetHPPercent() > HPThresholdHypercharge &&
                     CanHypercharge())
                     return Hypercharge;
 
@@ -309,7 +314,9 @@ internal partial class MCH : PhysicalRanged
                 {
                     // Reassemble
                     if (IsEnabled(Preset.MCH_ST_Adv_Reassemble) &&
-                        CanReassembleST())
+                        GetRemainingCharges(Reassemble) > MCH_ST_ReassemblePool &&
+                        GetTargetHPPercent() > HPThresholdReassemble &&
+                        CanReassemble())
                         return Reassemble;
 
                     // BarrelStabilizer
@@ -403,8 +410,8 @@ internal partial class MCH : PhysicalRanged
                     return OriginalHook(SlugShot);
 
                 if (IsEnabled(Preset.MCH_ST_Adv_Reassemble) &&
-                    ComboAction is SlugShot && ActionReady(OriginalHook(CleanShot)) &&
-                    CanReassembleST())
+                    ComboAction is SlugShot && !LevelChecked(Drill) && ActionReady(CleanShot) &&
+                    !HasStatusEffect(Buffs.Reassembled) && ActionReady(Reassemble))
                     return Reassemble;
 
                 if (ComboAction is SlugShot && ActionReady(OriginalHook(CleanShot)))
@@ -448,6 +455,7 @@ internal partial class MCH : PhysicalRanged
 
                 // Hypercharge
                 if (IsEnabled(Preset.MCH_AoE_Adv_Hypercharge) &&
+                    GetTargetHPPercent() > MCH_AoE_HyperchargeHPThreshold &&
                     CanHypercharge(true))
                     return Hypercharge;
 
@@ -466,7 +474,10 @@ internal partial class MCH : PhysicalRanged
                 if (!IsOverheated)
                 {
                     if (IsEnabled(Preset.MCH_AoE_Adv_Reassemble) &&
-                        CanReassembleAoE())
+                        GetTargetHPPercent() > MCH_AoE_ReassembleHPThreshold &&
+                        ActionReady(Reassemble) && !HasStatusEffect(Buffs.Reassembled) &&
+                        GetRemainingCharges(Reassemble) > MCH_AoE_ReassemblePool &&
+                        CanUseReassembleAoE())
                         return Reassemble;
 
                     // BarrelStabilizer
@@ -517,8 +528,8 @@ internal partial class MCH : PhysicalRanged
                     GetTargetHPPercent() > MCH_AoE_FlamethrowerHPOption)
                     return Flamethrower;
 
-                if (IsEnabled(Preset.MCH_AoE_Adv_Tools) &&
-                    GetTargetHPPercent() > MCH_AoE_ToolsHPThreshold &&
+                if ((!IsEnabled(Preset.MCH_AoE_Adv_Tools) ||
+                     GetTargetHPPercent() >= MCH_AoE_ToolsHPThreshold) &&
                     CanUseAoETools(ref actionID, MCH_AoE_AirAnchor))
                     return actionID;
             }

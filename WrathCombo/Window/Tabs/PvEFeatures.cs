@@ -84,7 +84,7 @@ internal class PvEFeatures : FeaturesWindow
                                 var padSize = (IconMaxSize - imgSize.X) / 2f;
                                 if (padSize > 0)
                                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padSize);
-                                ImGui.Image(icon.Handle, imgSize);
+                                ImGui.Image(icon.ImGuiHandle, imgSize);
                             }
                             else
                             {
@@ -92,7 +92,7 @@ internal class PvEFeatures : FeaturesWindow
                             }
                             ImGui.SameLine(LargerIndentWidth);
                             ImGuiEx.Spacing(new Vector2(0, VerticalCenteringPadding));
-                            ImGui.TextWrapped($"{header} {(disabled.Count > 0 ? FeaturesUI.Warning_DisabledDueToUpdate : "")}");
+                            ImGui.TextWrapped($"{header} {(DisabledJobsPVE.Any(x => x == id) ? FeaturesUI.Warning_DisabledDueToUpdate : "")}");
 
                             if (!string.IsNullOrEmpty(abbreviation) &&
                                 P.UIHelper.JobControlled(id) is not null)

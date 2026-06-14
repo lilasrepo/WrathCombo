@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface;
+using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using ECommons.ImGuiMethods;
 using System.Numerics;
@@ -65,13 +65,13 @@ public static class IconButtons
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + (padding.Y));
             }
 
-            ImGui.Image(texture.Handle, imageSize);
+            ImGui.Image(texture.ImGuiHandle, imageSize);
 
         }
         else
         {
 
-            ImGui.Image(texture.Handle, imageSize);
+            ImGui.Image(texture.ImGuiHandle, imageSize);
 
             ImGui.SameLine();
             if (size != Vector2.Zero)

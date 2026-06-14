@@ -78,28 +78,36 @@ internal static class Icons
 
     public static IDalamudTextureWrap? GetTextureFromIconId(uint iconId, uint stackCount = 0, bool hdIcon = true)
     {
-        GameIconLookup lookup = new(iconId + stackCount, false, hdIcon);
-        string path = Svc.Texture.GetIconPath(lookup);
-        string resolvePath = ResolvePath(path);
-
-        var wrap = Svc.Texture.GetFromFile(resolvePath);
-        if (wrap.TryGetWrap(out var icon, out _))
-            return icon;
-
+        // API12 / game 7.1: many icon IDs from game 7.5 (e.g. new job/role/CFC icons) don't exist on disk;
+        // GetIconPath throws FileNotFoundException. Outer try/catch returns null so the caller can fall back.
         try
         {
-            if (CachedModdedIcons.TryGetValue(iconId, out IDalamudTextureWrap? cachedIcon)) return cachedIcon;
-            var tex = Svc.Data.GameData.GetFileFromDisk<TexFile>(resolvePath);
-            var output = Svc.Texture.CreateFromRaw(RawImageSpecification.Rgba32(tex.Header.Width, tex.Header.Width), tex.GetRgbaImageData());
-            if (output != null)
+            GameIconLookup lookup = new(iconId + stackCount, false, hdIcon);
+            string path = Svc.Texture.GetIconPath(lookup);
+            string resolvePath = ResolvePath(path);
+
+            var wrap = Svc.Texture.GetFromFile(resolvePath);
+            if (wrap.TryGetWrap(out var icon, out _))
+                return icon;
+
+            try
             {
-                CachedModdedIcons[iconId] = output;
-                return output;
+                if (CachedModdedIcons.TryGetValue(iconId, out IDalamudTextureWrap? cachedIcon)) return cachedIcon;
+                var tex = Svc.Data.GameData.GetFileFromDisk<TexFile>(resolvePath);
+                var output = Svc.Texture.CreateFromRaw(RawImageSpecification.Rgba32(tex.Header.Width, tex.Header.Width), tex.GetRgbaImageData());
+                if (output != null)
+                {
+                    CachedModdedIcons[iconId] = output;
+                    return output;
+                }
             }
+            catch { }
+
+            return Svc.Texture.GetFromGame(path).GetWrapOrDefault();
         }
-        catch { }
-
-
-        return Svc.Texture.GetFromGame(path).GetWrapOrDefault();
+        catch (System.IO.FileNotFoundException)
+        {
+            return null;
+        }
     }
 }

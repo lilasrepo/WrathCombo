@@ -79,7 +79,9 @@ public partial class Provider
                 arcOption.BypassQuest => arc.BypassQuest,
                 arcOption.BypassFATE => arc.BypassFATE,
                 arcOption.IgnoreRangeInBoss => arcD.IgnoreRangeInBoss,
-                arcOption.UnTargetAndDisableForPenalty => arcD.UnTargetAndDisableForPenalty,
+                // API12 forward-port: arcOption.UnTargetAndDisableForPenalty is
+                // a newer enum value not present in the walk-back enum copy.
+                // arcOption.UnTargetAndDisableForPenalty => arcD.UnTargetAndDisableForPenalty,
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(passedOption), passedOption, null),
             };

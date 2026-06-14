@@ -5,7 +5,6 @@ using ECommons;
 using ECommons.EzIpcManager;
 using ECommons.Reflection;
 using System;
-using WrathCombo.Combos.PvE;
 
 #endregion
 
@@ -13,7 +12,7 @@ namespace WrathCombo.Services.IPC_Subscriber;
 
 public abstract class ReusableIPC : IDisposable
 {
-    private object? _plugin;
+    private IDalamudPlugin? _plugin;
     public EzIPCDisposalToken[] DisposalTokens;
     public string PluginName;
     protected bool ReflectionNotIPC;
@@ -42,14 +41,14 @@ public abstract class ReusableIPC : IDisposable
         DalamudReflector.TryGetDalamudPlugin(
             PluginName, out _plugin, ignoreCache: true);
 
-    protected object? Plugin
+    // API12 B1: IAsyncDalamudPlugin is API15-only; TC API12 has no async plugins, so
+    // the plain IDalamudPlugin cast (upstream pre-async behavior) is correct.
+    protected IDalamudPlugin Plugin
     {
         get
         {
             if (PluginIsLoaded)
-                if (_plugin is IDalamudPlugin)
-                    return (IDalamudPlugin)_plugin!;
-                else return (IAsyncDalamudPlugin)_plugin!;
+                return (IDalamudPlugin)_plugin!;
             throw new InvalidOperationException(
                 "Plugin is not loaded or does not exist. " +
                 "(This should be used after a `PluginIsLoaded` check)");

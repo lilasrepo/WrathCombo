@@ -50,6 +50,11 @@ public class UIHelper(Leasing leasing)
             .Where(l => l.AutoRotationControlled.Count != 0)
             .OrderByDescending(l => l.LastUpdated)
             .ToList();
+        // Race: CheckAutoRotationControlled() can report controlled while the
+        // Registrations dict has already been drained (lease just released).
+        // .First() on empty list throws and spams the framework update loop.
+        if (controllers.Count == 0)
+            return null;
         var controllingLeases = controllers
             .Select(l => l.PluginName);
         var controlledState = controllers
@@ -460,9 +465,9 @@ public class UIHelper(Leasing leasing)
         ImGui.SameLine();
 
         if (forPreset is null)
-            ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, label.Split('#')[0]);
+            ImGuiEx.TextWrapped(ImGuiColors.DalamudGrey, label.Split('#')[0]);
         else
-            ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey,
+            ImGuiEx.TextWrapped(ImGuiColors.DalamudGrey,
                 label.Contains("Auto") ? "" : label.Split('#')[0]);
 
         ImGui.PopStyleColor(2);
@@ -518,7 +523,7 @@ public class UIHelper(Leasing leasing)
         ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.TextColoredWrapped(ImGuiColors.DalamudGrey, label);
+        ImGuiEx.TextWrapped(ImGuiColors.DalamudGrey, label);
 
         ImGui.PopStyleColor(3);
         ImGui.EndGroup();

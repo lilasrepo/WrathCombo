@@ -4,9 +4,7 @@ using ECommons.GameFunctions;
 using System.Linq;
 using WrathCombo.Core;
 using WrathCombo.CustomComboNS;
-using WrathCombo.Data;
 using WrathCombo.Extensions;
-using WrathCombo.Services;
 using static WrathCombo.Combos.PvE.SGE.Config;
 using EZ = ECommons.Throttlers.EzThrottler;
 using TS = System.TimeSpan;
@@ -63,17 +61,17 @@ internal partial class SGE : Healer
 
             uint dotAction = OriginalHook(Dosis);
             DosisList.TryGetValue(dotAction, out (ushort Debuff, uint Eukrasian) debuff);
-            IGameObject? target = SimpleTarget.DottableEnemy(debuff.Eukrasian, debuff.Debuff, 0, 3, 2);
+            IGameObject? target = SimpleTarget.DottableEnemy(dotAction, debuff.Debuff, 0, 3, 2);
 
-            if (target is not null && CanApplyStatus(target, debuff.Debuff) && !JustUsedOn(debuff.Eukrasian, target) && LevelChecked(Eukrasia))
+            if (target is not null && CanApplyStatus(target, debuff.Debuff) && !JustUsedOn(dotAction, target) && LevelChecked(Eukrasia))
                 return HasStatusEffect(Buffs.Eukrasia)
                     ? dotAction.Retarget(DosisActions.ToArray(), target)
                     : Eukrasia;
 
-            if (HasBattleTarget() && !HasStatusEffect(Buffs.Eukrasia) && InCombat())
+            if (HasBattleTarget() && !HasStatusEffect(Buffs.Eukrasia))
             {
                 // Phlegma
-                if (InActionRange(OriginalHook(Phlegma)) &&
+                if (InCombat() && InActionRange(OriginalHook(Phlegma)) &&
                     ActionReady(OriginalHook(Phlegma)))
                 {
                     //If not enabled or not high enough level, follow slider
@@ -89,7 +87,7 @@ internal partial class SGE : Healer
                 }
 
                 // Movement Options
-                if (IsMoving())
+                if (InCombat() && IsMoving() && HasBattleTarget())
                 {
                     //Toxikon
                     if (ActionReady(OriginalHook(Toxikon)) && HasAddersting())
@@ -98,6 +96,9 @@ internal partial class SGE : Healer
                     // Dyskrasia
                     if (ActionReady(Dyskrasia) && InActionRange(Dyskrasia))
                         return OriginalHook(Dyskrasia);
+                    //Eukrasia
+                    if (ActionReady(Eukrasia) && !HasStatusEffect(Buffs.Eukrasia))
+                        return Eukrasia;
                 }
             }
 
@@ -145,11 +146,11 @@ internal partial class SGE : Healer
             }
 
             var hasDotTarget = EnemiesInRange(EukrasianDyskrasia).Count(x => (GetPossessedStatusRemainingTime(Debuffs.EukrasianDyskrasia, x) is <= 4 or float.NaN &&
-                                                                           GetPossessedStatusRemainingTime(DosisList[OriginalHook(Dosis)].Debuff, x) is <= 4 or float.NaN) &&
+                                                                           GetPossessedStatusRemainingTime(DosisList[OriginalHook(Dosis)].Debuff,x) is <= 4 or float.NaN) &&
                                                                            GetTargetHPPercent(x) > 25) >= 4;
 
             //Eukrasia for DoT
-            if (hasDotTarget &&
+            if (hasDotTarget && 
                 IsOffCooldown(Eukrasia) &&
                 !JustUsed(EukrasianDyskrasia) && //AoE DoT can be slow to take affect, doesn't apply to target first before others
                 TraitLevelChecked(Traits.OffensiveMagicMasteryII))
@@ -261,7 +262,7 @@ internal partial class SGE : Healer
                 uint dotAction = OriginalHook(Dosis);
                 ;
                 DosisList.TryGetValue(dotAction, out (ushort Debuff, uint Eukrasian) debuff);
-                IGameObject? target = SimpleTarget.DottableEnemy(debuff.Eukrasian, debuff.Debuff, ComputeHpThreshold, SGE_ST_DPS_EukrasianDosisUptime_Threshold, 2);
+                IGameObject? target = SimpleTarget.DottableEnemy(dotAction, debuff.Debuff, ComputeHpThreshold, SGE_ST_DPS_EukrasianDosisUptime_Threshold, 2);
 
                 //Single Target Dotting, needed because dottableenemy will not maintain single dot on main target of more than one target exists. 
                 if (NeedsDoT())
@@ -270,17 +271,17 @@ internal partial class SGE : Healer
                         : Eukrasia;
 
                 //2 target Dotting System to maintain dots on 2 enemies. Works with the same sliders and one target
-                if (target is not null && CanApplyStatus(target, debuff.Debuff) && !JustUsedOn(debuff.Eukrasian, target) && SGE_ST_DPS_EDosis_TwoTarget && LevelChecked(Eukrasia))
+                if (target is not null && CanApplyStatus(target, debuff.Debuff) && !JustUsedOn(dotAction, target) && SGE_ST_DPS_EDosis_TwoTarget && LevelChecked(Eukrasia))
                     return HasStatusEffect(Buffs.Eukrasia)
                         ? dotAction.Retarget(dosisActions, target)
                         : Eukrasia;
             }
 
-            if (HasBattleTarget() && !HasStatusEffect(Buffs.Eukrasia) && InCombat())
+            if (HasBattleTarget() && !HasStatusEffect(Buffs.Eukrasia))
             {
                 // Phlegma
                 if (IsEnabled(Preset.SGE_ST_DPS_Phlegma) &&
-                    InActionRange(OriginalHook(Phlegma)) &&
+                    InCombat() && InActionRange(OriginalHook(Phlegma)) &&
                     ActionReady(OriginalHook(Phlegma)))
                 {
                     //If not enabled or not high enough level, follow slider
@@ -298,9 +299,9 @@ internal partial class SGE : Healer
 
                 // Movement Options
                 if (IsEnabled(Preset.SGE_ST_DPS_Movement) &&
-                    IsMoving())
+                    InCombat() && IsMoving())
                 {
-                    foreach (int priority in SGE_ST_DPS_Movement_Priority.OrderBy(x => x))
+                    foreach(int priority in SGE_ST_DPS_Movement_Priority.OrderBy(x => x))
                     {
                         int index = SGE_ST_DPS_Movement_Priority.IndexOf(priority);
                         if (CheckMovementConfigMeetsRequirements(index, out uint action))
@@ -504,45 +505,41 @@ internal partial class SGE : Healer
             if (Role.CanLucidDream(6500))
                 return Role.LucidDreaming;
 
-            if (HasStatusEffect(Buffs.Eukrasia))
-                return OriginalHook(Prognosis);
+            if (ActionReady(Rhizomata) && !HasAddersgall() &&
+                CanWeave())
+                return Rhizomata;
 
-            if (ActionWatching.WeaveActions.Count < Service.Configuration.MaximumWeavesPerWindow)
-            {
-                if (ActionReady(Rhizomata) && !HasAddersgall() &&
-                    CanWeave())
-                    return Rhizomata;
+            if (ActionReady(OriginalHook(Physis)))
+                return OriginalHook(Physis);
 
-                if (ActionReady(OriginalHook(Physis)))
-                    return OriginalHook(Physis);
+            if (ActionReady(Kerachole) &&
+                TraitLevelChecked(Traits.EnhancedKerachole) &&
+                HasAddersgall())
+                return Kerachole;
 
-                if (ActionReady(Kerachole) &&
-                    TraitLevelChecked(Traits.EnhancedKerachole) &&
-                    HasAddersgall())
-                    return Kerachole;
+            if (ActionReady(Holos))
+                return Holos;
 
-                if (ActionReady(Holos))
-                    return Holos;
+            if (ActionReady(Ixochole) && HasAddersgall())
+                return Ixochole;
 
-                if (ActionReady(Ixochole) && HasAddersgall())
-                    return Ixochole;
+            if (ActionReady(Philosophia) && !HasStatusEffect(Buffs.Panhaima))
+                return Philosophia;
 
-                if (ActionReady(Philosophia) && !HasStatusEffect(Buffs.Panhaima))
-                    return Philosophia;
+            if (ActionReady(Panhaima) && !HasStatusEffect(Buffs.Eudaimonia))
+                return Panhaima;
 
-                if (ActionReady(Panhaima) && !HasStatusEffect(Buffs.Eudaimonia))
-                    return Panhaima;
+            if (ActionReady(Zoe) && (ActionReady(Pneuma) || !LevelChecked(Pneuma)))
+                return Zoe;
 
-                if (ActionReady(Zoe) && (ActionReady(Pneuma) || !LevelChecked(Pneuma)))
-                    return Zoe;
+            if (ActionReady(Pepsis) &&
+                HasStatusEffect(Buffs.EukrasianPrognosis))
+                return Pepsis;
 
-                if (ActionReady(Pepsis) &&
-                    HasStatusEffect(Buffs.EukrasianPrognosis))
-                    return Pepsis;
-            }
-
-            if (ActionReady(Eukrasia) && GetPartyBuffPercent(Buffs.EukrasianPrognosis) <= 50 && GetPartyBuffPercent(SCH.Buffs.Galvanize) <= 50 && !HasStatusEffect(Buffs.Eukrasia))
-                return Eukrasia;
+            if (ActionReady(Eukrasia) && GetPartyBuffPercent(Buffs.EukrasianPrognosis) <= 50 && GetPartyBuffPercent(SCH.Buffs.Galvanize) <= 50)
+                return HasStatusEffect(Buffs.Eukrasia)
+                    ? EukrasianPrognosis
+                    : Eukrasia;
 
             return actionID;
         }
@@ -608,7 +605,7 @@ internal partial class SGE : Healer
                 Role.CanLucidDream(SGE_ST_Heal_LucidOption))
                 return Role.LucidDreaming;
 
-            for (int i = 0; i < SGE_ST_Heals_Priority.Count; i++)
+            for(int i = 0; i < SGE_ST_Heals_Priority.Count; i++)
             {
                 int index = SGE_ST_Heals_Priority.IndexOf(i + 1);
                 int config = GetMatchingConfigST(index, healTarget, out uint spell, out bool enabled);
@@ -662,7 +659,7 @@ internal partial class SGE : Healer
                 return Role.LucidDreaming;
 
             float averagePartyHP = GetPartyAvgHPPercent();
-            for (int i = 0; i < SGE_AoE_Heals_Priority.Count; i++)
+            for(int i = 0; i < SGE_AoE_Heals_Priority.Count; i++)
             {
                 int index = SGE_AoE_Heals_Priority.IndexOf(i + 1);
                 int config = GetMatchingConfigAoE(index, out uint spell, out bool enabled);

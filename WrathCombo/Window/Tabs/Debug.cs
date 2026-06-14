@@ -38,9 +38,12 @@ using WrathCombo.Services.IPC_Subscriber;
 using WrathCombo.Window.Functions;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
 using Action = Lumina.Excel.Sheets.Action;
-using BattleNpcSubKindCS = FFXIVClientStructs.FFXIV.Client.Game.Object.BattleNpcSubKind;
+using BattleNPCSubKind = Dalamud.Game.ClientState.Objects.Enums.BattleNpcSubKind;
+using Status = Dalamud.Game.ClientState.Statuses.Status;
 using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
-using Status = Dalamud.Game.ClientState.Statuses.IStatus;
+using Dalamud.Game.ClientState.Statuses;
+// API12: FFXIVClientStructs.FFXIV.Client.Game.Object.BattleNpcSubKind doesn't exist; use BattleNPCSubKind alias above.
+using BattleNpcSubKindCS = Dalamud.Game.ClientState.Objects.Enums.BattleNpcSubKind;
 #endregion
 
 namespace WrathCombo.Window.Tabs;
@@ -347,7 +350,7 @@ internal class Debug : ConfigWindow, IDisposable
             CustomStyleText("Health:", $"{player.CurrentHp:N0} / {player.MaxHp:N0} ({MathF.Round(PlayerHealthPercentageHp(), 2)}%)");
             CustomStyleText("MP:", $"{player.CurrentMp:N0} / {player.MaxMp:N0}");
             CustomStyleText("Job:", $"{player.ClassJob.Value.NameEnglish} (ID: {player.ClassJob.RowId})");
-            CustomStyleText($"Level (synced):", $"{Player.Level} ({Svc.PlayerState.EffectiveLevel})");
+            CustomStyleText($"Level (synced):", $"{Player.Level} ({Player.Level})");
             CustomStyleText("Zone:", $"{Svc.Data.GetExcelSheet<TerritoryType>().FirstOrDefault(x => x.RowId == Svc.ClientState.TerritoryType).PlaceName.Value.Name} (ID: {Svc.ClientState.TerritoryType})");
             CustomStyleText("In PvP:", InPvP());
             CustomStyleText("In FATE:", InFATE());
@@ -357,8 +360,6 @@ internal class Debug : ConfigWindow, IDisposable
             CustomStyleText("Movement Time:", TimeMoving.ToString("mm\\:ss\\:ff"));
             CustomStyleText($"Dashing:", IsDashing());
             CustomStyleText("In Boss Encounter:", InBossEncounter());
-            CustomStyleText("Shield Percentage:", player.ShieldPercentage);
-            CustomStyleText("Shield Actual Value:", player.RawShieldValue());
 
             ImGuiEx.Spacing(new Vector2(0f, SpacingSmall));
 
@@ -619,7 +620,7 @@ internal class Debug : ConfigWindow, IDisposable
                 {
                     CustomStyleText("Current Opener", WrathOpener.CurrentOpener.GetType().Name);
                     CustomStyleText($"Cache:", WrathOpener.CurrentOpener?.CacheReady);
-                    CustomStyleText($"Pre-Checks:", $"Level: {WrathOpener.CurrentOpener?.LevelChecked}({Svc.PlayerState.EffectiveLevel}), CDs: {WrathOpener.CurrentOpener?.HasCooldowns()}");
+                    CustomStyleText($"Pre-Checks:", $"Level: {WrathOpener.CurrentOpener?.LevelChecked}({Player.Level}), CDs: {WrathOpener.CurrentOpener?.HasCooldowns()}");
                     CustomStyleText("Opener State:", WrathOpener.CurrentOpener.CurrentState);
                     CustomStyleText("Current Opener Action:", WrathOpener.CurrentOpener.CurrentOpenerAction.ActionName());
                     CustomStyleText("Current Opener Step:", WrathOpener.CurrentOpener.OpenerStep);
@@ -790,7 +791,7 @@ internal class Debug : ConfigWindow, IDisposable
             if (_debugSpell != null)
             {
                 var actionStatus = ActionManager.Instance()->GetActionStatus(ActionType.Action, _debugSpell.Value.RowId);
-                var icon = Svc.Texture.GetFromGameIcon(new(_debugSpell.Value.Icon)).GetWrapOrEmpty().Handle;
+                var icon = Svc.Texture.GetFromGameIcon(new(_debugSpell.Value.Icon)).GetWrapOrEmpty().ImGuiHandle;
 
                 ImGui.Image(icon, new Vector2(60).Scale());
                 ImGui.SameLine();
@@ -1262,7 +1263,7 @@ internal class Debug : ConfigWindow, IDisposable
         {
             bool? foundSheet = null;
             BNpcBase? battleNPCRow = null;
-            if (ActionWatching.BNPCSheet.TryGetValue(target.BaseId,
+            if (ActionWatching.BNPCSheet.TryGetValue(target.DataId,
                     out var sheetRow))
             {
                 battleNPCRow = sheetRow;
@@ -1320,7 +1321,7 @@ internal class Debug : ConfigWindow, IDisposable
 
             if (ImGui.TreeNode("Object Data"))
             {
-                CustomStyleText("Data/BaseId:", target?.BaseId);
+                CustomStyleText("Data/BaseId:", target?.DataId);
 
                 // Display 'EntityId' only if it differs from 'GameObjectId'
                 if (target is not null && target.EntityId != target.GameObjectId)
@@ -1376,7 +1377,8 @@ internal class Debug : ConfigWindow, IDisposable
                 .Where(x => x.ObjectKind == ObjectKind.BattleNpc &&
                             x.IsTargetable &&
                             !x.IsDead &&
-                            x.Struct()->BattleNpcSubKind is BattleNpcSubKindCS.Combatant or BattleNpcSubKindCS.BNpcPart);
+                            // API12: x.Struct()->BattleNpcSubKind unavailable; use Dalamud BattleNpcKind property.
+                            x.BattleNpcKind is BattleNpcSubKindCS.Enemy or BattleNpcSubKindCS.BattleNpcPart);
 
                 foreach (var enemy in enemies)
                 {
@@ -1398,28 +1400,10 @@ internal class Debug : ConfigWindow, IDisposable
 
     private static void DrawVFXTree(IGameObject? obj)
     {
-        if (ImGui.TreeNode($"VFX Data###{obj.GameObjectId}"))
+        // API12 B1 stub: VfxManager subsystem is unavailable on TC 7.1 (needs API15-only VfxInfo struct).
+        if (ImGui.TreeNode($"VFX Data###{obj?.GameObjectId ?? 0}"))
         {
-            ImGui.Text($"VFX for Target (ObjectId: {obj!.GameObjectId}):");
-            if (VfxManager.TryGetVfxFor(obj!.GameObjectId, out var vfxList, true))
-            {
-                foreach (var vfx in vfxList)
-                {
-                    CustomStyleText($"Path: {vfx.Path}{(IsTankBusterEffectPath(vfx) ? " (Tank Buster)" : "")}", $"Age: {vfx.AgeSeconds:N1}s");
-                    ImGui.SameLine();
-                    if (ImGui.Button($"Copy Path###{vfx.Path}{obj.GameObjectId}"))
-                    {
-                        ImGui.SetClipboardText(vfx.Path);
-                        Notify.Success($"{vfx.Path} copied.");
-                    }
-                }
-            }
-            else
-            {
-                ImGui.TextUnformatted("No VFX data tracked for target.");
-            }
-
-            ImGuiEx.Spacing(new Vector2(0f, SpacingSmall));
+            ImGui.TextUnformatted("VFX tracking unavailable on TC API12 build.");
             ImGui.TreePop();
         }
     }
@@ -1427,7 +1411,7 @@ internal class Debug : ConfigWindow, IDisposable
     // Custom 2-Column Styling
     static void CustomStyleText(string firstColumn, object? secondColumn, bool useMonofont = false, Vector4? optionalColor = null)
     {
-        ImGui.Columns(2, border: false);
+        ImGui.Columns(2, null, false);
         if (!string.IsNullOrEmpty(firstColumn))
         {
             ImGui.TextUnformatted(firstColumn);

@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -364,7 +364,7 @@ internal partial class DNC
                     PartnerPriority.RolePrio.GetValueOrDefault(
                         x.ClassJob.Value.Role, int.MaxValue));
 
-            switch (Svc.PlayerState.EffectiveLevel)
+            switch (Player.Level)
             {
                 case < 80:
                     orderedFilter = orderedFilter

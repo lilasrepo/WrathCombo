@@ -244,7 +244,6 @@ public static class DebugFile
         var currentZone = Content.ContentName is null or ""
             ? Content.TerritoryName
             : Content.ContentName;
-        var gotVFX = VfxManager.TryGetVfxFor(player.GameObjectId, out var vfxList);
 
         AddLine("START PLAYER INFO");
         AddLine($"Job: {job.Abbreviation} / {job.Name} / {job.NameEnglish}");
@@ -258,11 +257,8 @@ public static class DebugFile
         AddLine($"+Shield: {player.ShieldPercentage:F0}%");
         AddLine($"MP: {(float)player.CurrentMp / player.MaxMp * 100:F0}%");
         AddLine();
-        AddLine($"VFX on Player: {(gotVFX ? vfxList.Count.ToString() : "None")}");
-
-        if (gotVFX)
-            foreach (var vfx in vfxList)
-                AddLine($"- `{vfx.Path}` ({vfx.AgeSeconds:F1}s old)");
+        // API12 B1 stub: VfxManager subsystem is unavailable on TC 7.1.
+        AddLine($"VFX on Player: None (VfxManager unavailable on TC API12 build)");
 
         AddLine();
         AddLine($"PingPlugin Enabled: {PingPluginIPC.CanGetPing}");
@@ -315,7 +311,7 @@ public static class DebugFile
         if (target is IBattleChara)
         {
             battleTarget = target as IBattleChara;
-            if (ActionWatching.BNPCSheet.TryGetValue(battleTarget.BaseId,
+            if (ActionWatching.BNPCSheet.TryGetValue(battleTarget.DataId,
                     out var sheetRow))
             {
                 battleNPCRow = sheetRow;
@@ -326,7 +322,7 @@ public static class DebugFile
         }
 
         AddLine("START TARGET INFO");
-        AddLine($"IDs: (<entity>/<data or base>): {target?.EntityId} / {target?.BaseId}");
+        AddLine($"IDs: (<entity>/<data or base>): {target?.EntityId} / {target?.DataId}");
         AddLine($"Is Friendly: {target.IsFriendly()}");
         AddLine($"Is Hostile: {target.IsHostile()}");
         AddLine($"In Combat: {target.IsInCombat()}");
@@ -339,7 +335,7 @@ public static class DebugFile
         if (battleTarget is not null)
         {
             AddLine($"IDs: entity:{battleTarget.EntityId}, " +
-                    $"base/data:{battleTarget.BaseId}");
+                    $"base/data:{battleTarget.DataId}");
             AddLine($"Level: {battleTarget.Level}");
             AddLine($"Is Casting: {battleTarget.IsCasting}");
             AddLine($"Is Cast Interruptable: {battleTarget.IsCastInterruptible}");

@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using Dalamud.Game.ClientState.Objects.Types;
 using ECommons;
@@ -68,9 +68,10 @@ internal unsafe class AutoRotationController
         Svc.Log.Verbose($"[AutoRotStatusCheck] {((ushort)statusId).StatusName()} {(onPlayer ? "Gained" : "Lost")}");
     }
 
-    private void ScanForWarnings(Dalamud.Game.Chat.IHandleableChatMessage message)
+    // API12 IChatGui.OnMessageDelegate signature: (XivChatType, int (timestamp), ref SeString sender, ref SeString message, ref bool isHandled)
+    private void ScanForWarnings(Dalamud.Game.Text.XivChatType type, int timestamp, ref Dalamud.Game.Text.SeStringHandling.SeString sender, ref Dalamud.Game.Text.SeStringHandling.SeString message, ref bool isHandled)
     {
-        if (message.LogKind != Dalamud.Game.Text.XivChatType.SystemMessage)
+        if (type != Dalamud.Game.Text.XivChatType.SystemMessage)
             return;
 
         bool pauseWarningFound = false;
@@ -146,6 +147,7 @@ internal unsafe class AutoRotationController
                || IsOccupied()
                || Player.Mounted
                || !EzThrottler.Throttle("Autorot", cfg.Throttler)
+               || (cfg.DPSSettings.UnTargetAndDisableForPenalty && PlayerHasActionPenalty())
                || (ActionManager.Instance()->QueuedActionId > 0)
                || Paused;
     }
@@ -177,10 +179,6 @@ internal unsafe class AutoRotationController
 
         // Only run in combat if required
         if (cfg.InCombatOnly && NotInCombat && !CombatBypass)
-            return;
-
-        // Check for Pyretic / Reasons to stop
-        if (cfg.DPSSettings.UnTargetAndDisableForPenalty && PlayerHasActionPenalty())
             return;
 
         // Healer logic
@@ -1051,7 +1049,7 @@ internal unsafe class AutoRotationController
             IsInRange(chara, InBossEncounter() && cfg.DPSSettings.IgnoreRangeInBoss ? 50f : cfg.DPSSettings.MaxDistance) &&
             GetTargetHeightDifference(chara) <= (InBossEncounter() && cfg.DPSSettings.IgnoreRangeInBoss ? 100f : cfg.DPSSettings.MaxDistance) &&
             !TargetIsInvincible(chara) &&
-            !Service.Configuration.IgnoredNPCs.ContainsKey(chara.BaseId) &&
+            !Service.Configuration.IgnoredNPCs.ContainsKey(chara.DataId) &&
             ((cfg.DPSSettings.OnlyAttackInCombat && chara.Struct()->InCombat) || !cfg.DPSSettings.OnlyAttackInCombat) &&
             IsInLineOfSight(chara);
 
@@ -1183,7 +1181,7 @@ internal unsafe class AutoRotationController
                             GetTargetDistance(x.BattleChara) <= QueryRange &&
                             !TargetHasImmortality(x.BattleChara) &&
                             !x.BattleChara.StatusList.Any(x => StatusCache.DoNotHealStatuses.Contains(x.StatusId)) &&
-                            GetTargetHPPercent(x.BattleChara, cfg.HealerSettings.IncludeShields) <=
+                            GetTargetHPPercent(x.BattleChara) <=
                             (TargetHasExcog(x.BattleChara) ? cfg.HealerSettings.SingleTargetExcogHPP :
                                 TargetHasRegen(x.BattleChara) ? cfg.HealerSettings.SingleTargetRegenHPP :
                                 cfg.HealerSettings.SingleTargetHPP) &&
@@ -1206,7 +1204,7 @@ internal unsafe class AutoRotationController
                                 (outAct == 0
                                     ? GetTargetDistance(x.BattleChara) <= 20f
                                     : InActionRange(outAct, x.BattleChara)) &&
-                                GetTargetHPPercent(x.BattleChara, cfg.HealerSettings.IncludeShields) <= cfg.HealerSettings.AoETargetHPP);
+                                GetTargetHPPercent(x.BattleChara) <= cfg.HealerSettings.AoETargetHPP);
                 memberCount = members.Count();
             }
             catch { memberCount = 0; }

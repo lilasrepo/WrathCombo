@@ -290,7 +290,8 @@ namespace WrathCombo.Window
                 var dict = new Dictionary<Strings, string>
                 {
                     [Strings.OccultCrescentContentName] = Svc.Data.GetExcelSheet<BannerBg>(LangFromCulture).GetRow(312).Name.ToString(),
-                    [Strings.OccultPhantomChemist]      = Svc.Data.GetExcelSheet<MKDSupportJob>(LangFromCulture).GetRow(10).Name.ToString(),
+                    // API12 stub: MKDSupportJob row schema differs in game 7.1 (no .Name); hard-code English name.
+                    [Strings.OccultPhantomChemist]      = "Phantom Chemist",
                 };
 
                 return dict.ToFrozenDictionary();

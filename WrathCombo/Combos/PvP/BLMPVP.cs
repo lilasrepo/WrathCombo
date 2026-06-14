@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using WrathCombo.CustomComboNS;
 using WrathCombo.CustomComboNS.Functions;
 using static WrathCombo.Window.Functions.UserConfig;
@@ -162,7 +162,7 @@ internal static class BLMPvP
             bool isMoving = IsMoving();
             bool inCombat = InCombat();
             bool hasTarget = HasTarget();
-            bool isTargetNPC = CurrentTarget is IBattleNpc && CurrentTarget.BaseId != 8016;
+            bool isTargetNPC = CurrentTarget is IBattleNpc && CurrentTarget.DataId != 8016;
             bool hasParadox = HasStatusEffect(Buffs.Paradox);
             bool hasResonance = HasStatusEffect(Buffs.SoulResonance);
             bool hasWreathOfFire = HasStatusEffect(Buffs.WreathOfFire);

@@ -1,4 +1,4 @@
-using Dalamud.Interface;
+﻿using Dalamud.Interface;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -217,7 +217,7 @@ internal class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         if (ThreadLoadImageHandler.TryGetTextureWrap(imagePath, out var logo))
             ImGuiEx.LineCentered("###WrathLogo", () =>
-                ImGui.Image(logo.Handle, imageSize));
+                ImGui.Image(logo.ImGuiHandle, imageSize));
 
         ImGui.Spacing();
         ImGui.Separator();

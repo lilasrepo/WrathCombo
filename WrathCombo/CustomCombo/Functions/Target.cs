@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using ECommons.DalamudServices;
 using ECommons.GameFunctions;
 using ECommons.Throttlers;
@@ -57,10 +57,10 @@ internal abstract partial class CustomComboFunctions
         if ((optionalTarget ?? CurrentTarget) is not IBattleChara chara)
             return false;
 
-        if (EnemiesThatShouldNotBeConsideredBosses.Contains(chara.BaseId))
+        if (EnemiesThatShouldNotBeConsideredBosses.Contains(chara.DataId))
             return false;
-
-        return chara.NameId == 541 || ActionWatching.BossesBaseIds.Contains(chara.BaseId);
+        
+        return chara.NameId == 541 || ActionWatching.BossesBaseIds.Contains(chara.DataId);
     }
 
     /// <summary> Checks if an object is quest-related. Defaults to CurrentTarget unless specified. </summary>
@@ -99,7 +99,7 @@ internal abstract partial class CustomComboFunctions
         if ((optionalTarget ?? CurrentTarget) is not IBattleChara chara || HasStatusEffect(3808, chara, true))
             return false;
 
-        return ActionWatching.BNPCSheet.TryGetValue(chara.BaseId, out var charaSheet) && !charaSheet.IsOmnidirectional;
+        return ActionWatching.BNPCSheet.TryGetValue(chara.DataId, out var charaSheet) && !charaSheet.IsOmnidirectional;
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ internal abstract partial class CustomComboFunctions
         }
 
         // Bail if blacklisted
-        if (Service.Configuration.StatusBlacklist.Any(x => x.Status == All.Debuffs.Stun && x.BaseId == chara.BaseId))
+        if (Service.Configuration.StatusBlacklist.Any(x => x.Status == All.Debuffs.Stun && x.BaseId == chara.DataId))
             return false;
 
         // Bail if it fails the Internal Cooldown tracker for Stuns
@@ -374,7 +374,7 @@ internal abstract partial class CustomComboFunctions
 
         if (sheetSpell.CanTargetHostile && sheetSpell.CastType == 1)
         {
-            return Svc.Objects.Where(x => x.IsHostile() && GetTargetDistance(x) <= GetActionRange(aoeSpell) && (!checkIgnoredList || !Service.Configuration.IgnoredNPCs.ContainsKey(x.BaseId)));
+            return Svc.Objects.Where(x => x.IsHostile() && GetTargetDistance(x) <= GetActionRange(aoeSpell) && (!checkIgnoredList || !Service.Configuration.IgnoredNPCs.ContainsKey(x.DataId)));
         }
 
         return sheetSpell.CastType switch
@@ -807,13 +807,13 @@ internal abstract partial class CustomComboFunctions
                    o.IsFriendly() &&
                    IsInLineOfSight(o);
 
-        return o is { IsTargetable: true } &&
+        return o is { ObjectKind: ObjectKind.BattleNpc, IsTargetable: true } &&
                o.IsWithinRange(60f) &&
                o.IsHostile() &&
                (!checkInvincible ||
                 !TargetIsInvincible(o)) &&
                (!checkIgnoredList ||
-                !Service.Configuration.IgnoredNPCs.ContainsKey(o.BaseId)) &&
+                !Service.Configuration.IgnoredNPCs.ContainsKey(o.DataId)) &&
                IsInLineOfSight(o);
     }
 

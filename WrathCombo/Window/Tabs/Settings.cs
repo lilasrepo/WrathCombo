@@ -350,7 +350,7 @@ internal class Settings : ConfigWindow
                 {
                     var value = (float)setting.Value;
                     ImGui.PushItemWidth(75);
-                    changed = ImGui.InputFloat(label, ref value, format: $"{value:N1}");
+                    changed = ImGui.InputFloat(label, ref value, 0f, 0f, $"{value:N1}");
                     if (changed)
                     {
                         if (value < setting.MinFLoat)
@@ -373,7 +373,7 @@ internal class Settings : ConfigWindow
                         ImGui.PushItemWidth(75);
                         if (setting.MinInt is null ||
                             setting.MaxInt is null)
-                            changed = ImGui.SliderInt(label, ref value);
+                            changed = ImGui.SliderInt(label, ref value, 0, 100);
                         else
                             changed = ImGui.SliderInt(label,
                                 ref value,
@@ -404,7 +404,7 @@ internal class Settings : ConfigWindow
                     ImGui.PushItemWidth(75);
                     if (setting.MinFLoat is null ||
                         setting.MaxFloat is null)
-                        changed = ImGui.SliderFloat(label, ref value, format: $"{value:N1}");
+                        changed = ImGui.SliderFloat(label, ref value, 0f, 1f, $"{value:N1}");
                     else
                         changed = ImGui.SliderFloat(label,
                             ref value,
