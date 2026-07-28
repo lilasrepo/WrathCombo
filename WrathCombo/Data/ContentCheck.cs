@@ -567,7 +567,7 @@ public class ContentCheck
 
         if (Content.ContentType is ContentType.Raid)
         {
-            if (Content.ContentFinderConditionRowId is 93 or 94 or 95 or 96 or 97
+            if (Content.ContentFinderConditionRow?.RowId is 93 or 94 or 95 or 96 or 97
                 or 98 or 99 or 100 or 103 or 104 or 105 or 107 or 108 or 113 or 114
                 or 137 or 138 or 186 or 187 or 188)
                 return false;

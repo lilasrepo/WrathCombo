@@ -219,7 +219,7 @@ internal class ConfigWindow : Dalamud.Interface.Windowing.Window
 
         if (ThreadLoadImageHandler.TryGetTextureWrap(imagePath, out var logo))
             ImGuiEx.LineCentered("###WrathLogo", () =>
-                ImGui.Image(logo.ImGuiHandle, imageSize));
+                ImGui.Image(logo.Handle, imageSize));
 
         ImGui.Spacing();
         ImGui.Separator();

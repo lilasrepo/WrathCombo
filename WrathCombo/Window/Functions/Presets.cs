@@ -351,7 +351,7 @@ internal class Presets : ConfigWindow
                 foreach (var icon in att.ActionIcons)
                 {
                     var img = Svc.Texture.GetFromGameIcon(new(icon)).GetWrapOrEmpty();
-                    ImGui.Image(img.ImGuiHandle, (img.Size / 2f) * ImGui.GetIO().FontGlobalScale);
+                    ImGui.Image(img.Handle, (img.Size / 2f) * ImGui.GetIO().FontGlobalScale);
                     ImGui.SameLine();
                 }
                 ImGui.EndTooltip();
@@ -457,7 +457,7 @@ internal class Presets : ConfigWindow
         if (icon is null) return false;
         ImGui.SameLine();
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 3f.Scale());
-        ImGui.Image(icon.ImGuiHandle, (icon.Size / 2f) * ImGui.GetIO().FontGlobalScale);
+        ImGui.Image(icon.Handle, (icon.Size / 2f) * ImGui.GetIO().FontGlobalScale);
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 3f.Scale());
         return true;
     }
@@ -510,7 +510,7 @@ internal class Presets : ConfigWindow
             imgSize *= 3f;
 
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 6f.Scale());
-        ImGui.Image(icon.ImGuiHandle, imgSize);
+        ImGui.Image(icon.Handle, imgSize);
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 6f.Scale());
         return true;
     }

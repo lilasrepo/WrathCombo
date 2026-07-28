@@ -158,7 +158,7 @@ public static class ActionWatching
     }
     */
 
-    private static unsafe bool UseActionLocationDetour(ActionManager* thisPtr, ActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam)
+    private static unsafe bool UseActionLocationDetour(ActionManager* thisPtr, ActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam, byte a7)
     {
         // TODO Revisit maybe
         //if (actionType == ActionType.Action && !_tainted && !(location->X != 0 || location->Y != 0 || location->Z != 0))
@@ -180,7 +180,7 @@ public static class ActionWatching
         //        Svc.Framework.RunOnTick(() => _tainted = false, TimeSpan.FromSeconds(2));
         //    }
         //}
-        return UseActionLocHook.Original(thisPtr, actionType, actionId, targetId, location, extraParam);
+        return UseActionLocHook.Original(thisPtr, actionType, actionId, targetId, location, extraParam, a7);
     }
 
     public static void Enable()
@@ -487,9 +487,9 @@ public static class ActionWatching
             if (recastGroupDetail == null) return null;
 
             var additionalRecastGroupDetail = actionManager->GetRecastGroupDetail(actionManager->GetAdditionalRecastGroup((ActionType)actionType, actionID));
-            var additionalRecastRemaining = additionalRecastGroupDetail != null && additionalRecastGroupDetail->IsActive != 0 ? additionalRecastGroupDetail->Total - additionalRecastGroupDetail->Elapsed : 0;
+            var additionalRecastRemaining = additionalRecastGroupDetail != null && additionalRecastGroupDetail->IsActive ? additionalRecastGroupDetail->Total - additionalRecastGroupDetail->Elapsed : 0;
 
-            if (recastGroupDetail->IsActive == 0) return additionalRecastRemaining;
+            if (!recastGroupDetail->IsActive) return additionalRecastRemaining;
 
             var charges = actionType == ActionType.Action ? ActionManager.GetMaxCharges(actionID, Player.MaxLevel) : 1;
             var recastRemaining = recastGroupDetail->Total / charges - recastGroupDetail->Elapsed;

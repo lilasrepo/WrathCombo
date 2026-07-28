@@ -446,7 +446,7 @@ internal class Debug : ConfigWindow, IDisposable
                     $"content:{Content.ContentName ?? "??"}, territory:{Content.TerritoryName ?? "??"}");
                 CustomStyleText("Content IDs:",
                     $"territory:{Content.TerritoryID}, cfc:{Content.ContentFinderConditionRow?.RowId.ToString() ?? "??"}, map:{Content.MapID}");
-                CustomStyleText("Content Type:", $"{(Content.ContentType.ToString() ?? "??")} {Content.ContentTypeRowId}");
+                CustomStyleText("Content Type:", $"{(Content.ContentType.ToString() ?? "??")} {Content.ContentTypeRow?.RowId}");
                 CustomStyleText("Intended Use:", Content.TerritoryIntendedUse?.ToString() ?? "??");
                 CustomStyleText("Difficulty:",
                     $"from name:{Content.ContentDifficultyFromName ?? "??"}, determined:{Content.ContentDifficulty?.ToString() ?? "??"}");
@@ -798,7 +798,7 @@ internal class Debug : ConfigWindow, IDisposable
             if (_debugSpell != null)
             {
                 var actionStatus = ActionManager.Instance()->GetActionStatus(ActionType.Action, _debugSpell.Value.RowId);
-                var icon = Svc.Texture.GetFromGameIcon(new(_debugSpell.Value.Icon)).GetWrapOrEmpty().ImGuiHandle;
+                var icon = Svc.Texture.GetFromGameIcon(new(_debugSpell.Value.Icon)).GetWrapOrEmpty().Handle;
 
                 ImGui.Image(icon, new Vector2(60).Scale());
                 ImGui.SameLine();
@@ -1464,7 +1464,7 @@ internal class Debug : ConfigWindow, IDisposable
     // Custom 2-Column Styling
     static void CustomStyleText(string firstColumn, object? secondColumn, bool useMonofont = false, Vector4? optionalColor = null)
     {
-        ImGui.Columns(2, null, false);
+        ImGui.Columns(2, default, false);
         if (!string.IsNullOrEmpty(firstColumn))
         {
             ImGui.TextUnformatted(firstColumn);

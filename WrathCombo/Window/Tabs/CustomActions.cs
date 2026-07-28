@@ -64,7 +64,7 @@ namespace WrathCombo.Window.Tabs
                     ImGuiWindowFlags.NoDecoration |
                     ImGuiWindowFlags.AlwaysAutoResize);
 
-                ImGui.Image(texture.ImGuiHandle, new(50f.Scale()));
+                ImGui.Image(texture.Handle, new(50f.Scale()));
                 ImGui.End();
 
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) || (ImGui.IsMouseReleased(ImGuiMouseButton.Left) && DragDropMode))
@@ -74,7 +74,7 @@ namespace WrathCombo.Window.Tabs
                         var val = P.CustomActions.HoveredSlot.Value;
                         RaptureHotbarModule.Instance()->Hotbars[val.Hotbar].Slots[val.Slot].Set(RaptureHotbarModule.HotbarSlotType.Action, SelectedAction.Id);
                         var actualSlot = RaptureHotbarModule.Instance()->Hotbars[val.Hotbar].Slots[val.Slot];
-                        RaptureHotbarModule.Instance()->WriteSavedSlot(Player.ClassJob.RowId, (uint)val.Hotbar, (uint)val.Slot, &actualSlot, false, false);
+                        RaptureHotbarModule.Instance()->WriteSavedSlot(Player.JobId, (uint)val.Hotbar, (uint)val.Slot, &actualSlot, false, false);
                     }
                     SelectedAction = null;
                     DragDropMode = false;
@@ -114,7 +114,7 @@ namespace WrathCombo.Window.Tabs
 
                 var btnSize = ImGui.GetFrameHeight() * 2.5f.Scale();
                 ImGui.TableNextColumn();
-                ImGui.ImageButton(texture.ImGuiHandle, new(btnSize));
+                ImGui.ImageButton(texture.Handle, new(btnSize));
 
                 if (ImGui.IsItemHovered())
                 {
@@ -130,7 +130,7 @@ namespace WrathCombo.Window.Tabs
                     }
 
                     ImGui.BeginTooltip();
-                    ImGui.Image(texture.ImGuiHandle, new(50));
+                    ImGui.Image(texture.Handle, new(50));
                     ImGui.SameLine();
                     var pos = ImGui.GetCursorPos();
                     ImGuiEx.Text($"{act.Name}");

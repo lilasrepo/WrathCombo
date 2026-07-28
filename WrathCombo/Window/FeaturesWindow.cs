@@ -126,7 +126,7 @@ internal class FeaturesWindow : ConfigWindow
         {
             if (imgPadSize > 0)
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + imgPadSize);
-            ImGui.Image(icon.ImGuiHandle, imgSize);
+            ImGui.Image(icon.Handle, imgSize);
         }
         else
         {

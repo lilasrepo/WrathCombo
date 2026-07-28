@@ -84,7 +84,7 @@ internal class PvEFeatures : FeaturesWindow
                                 var padSize = (IconMaxSize - imgSize.X) / 2f;
                                 if (padSize > 0)
                                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padSize);
-                                ImGui.Image(icon.ImGuiHandle, imgSize);
+                                ImGui.Image(icon.Handle, imgSize);
                             }
                             else
                             {

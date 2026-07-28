@@ -36,7 +36,7 @@ internal abstract partial class CustomComboFunctions
     private static readonly StringComparer Lowerer =
         StringComparer.FromComparison(Lower);
 
-    private static uint? CurrentCFC => Content.ContentFinderConditionRowId;
+    private static uint? CurrentCFC => Content.ContentFinderConditionRow?.RowId;
 
     public static List<TTSData> TTSTankbusters = [];
     public static List<TTSData> TTSGroupwides = [];

@@ -5,7 +5,7 @@
     <PropertyGroup>
         <Authors>Team Wrath</Authors>
         <Company>-</Company>
-        <Version>1.0.4.11</Version>
+        <Version>1.0.4.12</Version>
         <!-- This is the version that will be used when pushing to the repo.-->
         <Description>XIVCombo for very lazy players</Description>
         <Copyright>Copyleft attick 2021 thanks attick UwU</Copyright>
@@ -42,20 +42,20 @@
 
     <!-- Required Paths -->
     <PropertyGroup>
-        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api13\</DalamudLibPath>
         <DalamudDevPlugins>$(appdata)\XIVLauncher\devPlugins\WrathCombo\</DalamudDevPlugins>
         <DalamudPluginPath>$(appdata)\XIVLauncher\installedPlugins\WrathCombo\$(version)</DalamudPluginPath>
     </PropertyGroup>
 
     <!-- Path Overrides for Linux -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api13\</DalamudLibPath>
         <DalamudDevPlugins>$(HOME)/.xlcore/devPlugins/</DalamudDevPlugins>
     </PropertyGroup>
 
     <!-- Path Overrides for Mac -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api12\</DalamudLibPath>
+        <DalamudLibPath>$(MSBuildThisFileDirectory)..\..\..\TC_ok\_dalamud_api13\</DalamudLibPath>
         <DalamudDevPlugins>$(HOME)/Library/Application Support/XIV on Mac/devPlugins/</DalamudDevPlugins>
     </PropertyGroup>
 
@@ -76,7 +76,7 @@
 
     <!-- Dalamud Packaging -->
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.13" />
+        <PackageReference Include="DalamudPackager" Version="13.1.0" />
         <PackageReference Include="System.Speech" Version="10.0.5" />
     </ItemGroup>
 
@@ -106,7 +106,11 @@
         </Reference>
 
         <Reference Include="Dalamud.Bindings.ImGui">
-            <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
+            <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImGui.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Dalamud.Bindings.ImPlot">
+            <HintPath>$(DalamudLibPath)Dalamud.Bindings.ImPlot.dll</HintPath>
             <Private>False</Private>
         </Reference>
 

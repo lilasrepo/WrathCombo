@@ -659,7 +659,7 @@ public partial class WrathCombo
                         //Retrieve final ClassJob
                         job = jobSearch.GetJob().GetUpgradedJob().GetData();
 
-                        if (job.Value.RowId != Player.ClassJob.RowId)
+                        if (job.Value.RowId != Player.JobId)
                             DuoLog.Warning($"You are not on {job.Value.Name()}");
                     }
                 }

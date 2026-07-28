@@ -230,7 +230,7 @@ public sealed partial class WrathCombo : IDalamudPlugin
         RegisterCommands();
 
         DtrBarEntry ??= Svc.DtrBar.Get("Wrath Combo");
-        DtrBarEntry.OnClick = () =>
+        DtrBarEntry.OnClick = _ =>
         {
             ToggleAutoRotation(!Service.Configuration.RotationConfig.Enabled);
         };
@@ -240,7 +240,7 @@ public sealed partial class WrathCombo : IDalamudPlugin
 
         OpenerDtr ??= Svc.DtrBar.Get("Wrath Combo Opener");
 
-        OpenerDtr.OnClick += () =>
+        OpenerDtr.OnClick += _ =>
         {
             var preset = WrathOpener.CurrentOpener?.Preset;
             if (preset is not { } pre)
