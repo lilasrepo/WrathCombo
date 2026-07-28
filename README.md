@@ -1,11 +1,11 @@
-# Wrath Combo（繁中移植版 · TC12） / Traditional-Chinese Port
+# Wrath Combo（繁中移植版 · TC13） / Traditional-Chinese Port
 
 > 把連段與互斥技能整合到單一按鍵上——還不只如此。<br>
 > Condenses combos and mutually exclusive abilities onto a single button — and then some.
 
-**繁體中文**：這是 **[Wrath Combo](https://github.com/PunishXIV/WrathCombo)** 的繁體中文客戶端移植版，對應 **FFXIV 7.1 / yanmucorp Dalamud API12（.NET 9）**。本專案僅做相容性移植，**非官方、非原作維護**；所有原始功能與設計著作權歸原作者 **Team Wrath**。
+**繁體中文**：這是 **[Wrath Combo](https://github.com/PunishXIV/WrathCombo)** 的繁體中文客戶端移植版，對應 **FFXIV 7.20 / yanmucorp Dalamud API13（.NET 9）**。本專案僅做相容性移植，**非官方、非原作維護**；所有原始功能與設計著作權歸原作者 **Team Wrath**。
 
-**English**: A Traditional-Chinese-client port of **[Wrath Combo](https://github.com/PunishXIV/WrathCombo)** targeting **FFXIV 7.1 / yanmucorp Dalamud API12 (.NET 9)**. Compatibility port only — **unofficial and not maintained by the original author**. All original work © **Team Wrath**.
+**English**: A Traditional-Chinese-client port of **[Wrath Combo](https://github.com/PunishXIV/WrathCombo)** targeting **FFXIV 7.20 / yanmucorp Dalamud API13 (.NET 9)**. Compatibility port only — **unofficial and not maintained by the original author**. All original work © **Team Wrath**.
 
 ---
 
@@ -24,7 +24,7 @@ Collapses combos and mutually exclusive abilities onto one button, with PvE/PvP 
    ```
    https://raw.githubusercontent.com/lilasrepo/DalamudPlugins/main/pluginmaster.json
    ```
-4. 輸入 `/xlplugins`，搜尋 **Wrath Combo (TC12)** → 安裝 → 啟用。
+4. 輸入 `/xlplugins`，搜尋 **Wrath Combo (TC13)** → 安裝 → 啟用。
 
 **English**
 1. Launch the Traditional-Chinese client with **XIVTCLauncher**.
@@ -33,14 +33,14 @@ Collapses combos and mutually exclusive abilities onto one button, with PvE/PvP 
    ```
    https://raw.githubusercontent.com/lilasrepo/DalamudPlugins/main/pluginmaster.json
    ```
-4. Type `/xlplugins`, search **Wrath Combo (TC12)** → Install → Enable.
+4. Type `/xlplugins`, search **Wrath Combo (TC13)** → Install → Enable.
 
 ## 對應版本 / Compatibility
 
 | 項目 / Item | 版本 / Version |
 |---|---|
-| 遊戲 / Game | FFXIV 7.1（繁中客戶端 / TC client） |
-| Dalamud | yanmucorp API12（.NET 9） |
+| 遊戲 / Game | FFXIV 7.20（繁中客戶端 / TC client） |
+| Dalamud | yanmucorp API13（.NET 9） |
 | 移植自上游 / Ported from upstream | v1.0.4.8 |
 
 ## 原作與授權 / Credits & License
