@@ -1,4 +1,4 @@
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using ECommons.DalamudServices;
 using ECommons.ExcelServices;
 using ECommons.GameHelpers;
@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using WrathCombo.Combos.PvE;
+using WrathCombo.Combos.PvE.ALL;
 using WrathCombo.Combos.PvE.Enums;
 using WrathCombo.CustomComboNS.Functions;
 using WrathCombo.Data;
@@ -21,19 +22,40 @@ public abstract class WrathOpener
     private int openerStep;
     private static WrathOpener? currentOpener;
 
-    public void ProgressOpener(uint actionId)
+    public void ProgressOpener(uint actionId, bool item = false)
     {
-        if (actionId == CurrentOpenerAction || (AllowUpgradeSteps.Any(x => x == OpenerStep) && OriginalHook(CurrentOpenerAction) == actionId))
+        if (item)
         {
-            OpenerStep++;
-            if (OpenerStep > OpenerActions.Count)
-            {
-                CurrentState = OpenerState.OpenerFinished;
-                return;
-            }
+            var normalisedAction = actionId >= 1_000_000 ? actionId -= 1_000_000 : actionId;
+            var normalisedCustom = CurrentOpenerAction >= All.Items ? CurrentOpenerAction -= All.Items : CurrentOpenerAction;
 
-            PreviousOpenerAction = CurrentOpenerAction;
-            CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+            if (normalisedAction == normalisedCustom)
+            {
+                OpenerStep++;
+                if (OpenerStep > OpenerActions.Count)
+                {
+                    CurrentState = OpenerState.OpenerFinished;
+                    return;
+                }
+
+                PreviousOpenerAction = CurrentOpenerAction;
+                CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+            }
+        }
+        else
+        {
+            if (actionId == CurrentOpenerAction || (AllowUpgradeSteps.Any(x => x == OpenerStep) && OriginalHook(CurrentOpenerAction) == actionId))
+            {
+                OpenerStep++;
+                if (OpenerStep > OpenerActions.Count)
+                {
+                    CurrentState = OpenerState.OpenerFinished;
+                    return;
+                }
+
+                PreviousOpenerAction = CurrentOpenerAction;
+                CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+            }
         }
     }
 
@@ -108,7 +130,7 @@ public abstract class WrathOpener
 
     public virtual List<(int[] Steps, uint NewAction, Func<bool> Condition)> SubstitutionSteps { get; set; } = new();
 
-    public virtual List<(int[] Steps, Func<int> HoldDelay)> PrepullDelays { get; set; } = new();
+    public virtual List<(int[] Steps, Func<float> HoldDelay)> PrepullDelays { get; set; } = new();
 
     public virtual List<(int[] Steps, Func<bool> Condition)> SkipSteps { get; set; } = new();
 
@@ -116,6 +138,7 @@ public abstract class WrathOpener
 
     private int DelayedStep = 0;
     private DateTime DelayedAt;
+    private float DelayedSecs = 0;
 
     public uint CurrentOpenerAction
     {
@@ -136,6 +159,12 @@ public abstract class WrathOpener
 
     internal abstract UserData? ContentCheckConfig { get; }
 
+    internal abstract bool IncludePot { get; }
+
+    // refresh 2026-07-29: upstream moved to Svc.PlayerState.EffectiveLevel, which this
+    // walk-back ECommons does not expose (no PlayerState service). Kept on Player.Level,
+    // the form TC has always shipped. Difference is level-sync awareness in opener gating;
+    // revisit if the ECommons walk-back ever gains PlayerState.
     public bool LevelChecked => Player.Level >= MinOpenerLevel && Player.Level <= MaxOpenerLevel;
 
     public abstract Preset Preset { get; }
@@ -185,7 +214,7 @@ public abstract class WrathOpener
                     prevStepSkipping = p.Condition();
 
                 bool delay = PrepullDelays.FindFirst(x => x.Steps.Any(y => y == DelayedStep && y == OpenerStep), out var hold);
-                if ((!delay && !prevStepSkipping && ActionWatching.TimeSinceLastAction.TotalSeconds >= Service.Configuration.OpenerTimeout) || (delay && (DateTime.Now - DelayedAt).TotalSeconds > hold.HoldDelay() + Service.Configuration.OpenerTimeout))
+                if ((!delay && !prevStepSkipping && ActionWatching.TimeSinceLastAction.TotalSeconds >= Service.Configuration.OpenerTimeout) || (delay && (DateTime.Now - DelayedAt).TotalSeconds > DelayedSecs + Service.Configuration.OpenerTimeout))
                 {
                     CurrentState = OpenerState.FailedOpener;
                     return false;
@@ -194,12 +223,21 @@ public abstract class WrathOpener
 
             if (OpenerStep <= OpenerActions.Count)
             {
+                if (CurrentOpenerAction >= All.Items && (CurrentOpenerAction == All.Items || (!IncludePot & CurrentOpenerAction >= All.Items) || !Items.ItemReady(CurrentOpenerAction - All.Items)))
+                {
+                    Svc.Log.Debug($"Skipping item {CurrentOpenerAction.ActionName()} at step {OpenerStep}");
+                    OpenerStep++;
+                    CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                }
+
+                bool skipped = false;
                 foreach (var (Step, Condition) in SkipSteps.Where(x => x.Steps.Any(y => y == OpenerStep)))
                 {
-                    if (Condition())
+                    while (Step.Any(x => x == OpenerStep) && Condition())
                     {
                         Svc.Log.Debug($"Skipping from Opener Step {OpenerStep} to {OpenerStep + 1}");
                         OpenerStep++;
+                        skipped = true;
                     }
 
                     if (OpenerStep > OpenerActions.Count)
@@ -207,6 +245,12 @@ public abstract class WrathOpener
                         CurrentState = OpenerState.OpenerFinished;
                         return false;
                     }
+                }
+
+                if (skipped)
+                {
+                    actionID = All.SavageBlade;
+                    return true;
                 }
 
                 actionID = CurrentOpenerAction = AllowUpgradeSteps.Any(x => x == OpenerStep) ? OriginalHook(OpenerActions[OpenerStep - 1]) : OpenerActions[OpenerStep - 1];
@@ -235,9 +279,10 @@ public abstract class WrathOpener
                     {
                         DelayedAt = DateTime.Now;
                         DelayedStep = OpenerStep;
+                        DelayedSecs = HoldDelay();
                     }
 
-                    if ((DateTime.Now - DelayedAt).TotalSeconds < HoldDelay() && !PartyInCombat())
+                    if ((DateTime.Now - DelayedAt).TotalSeconds < DelayedSecs && !PartyInCombat())
                     {
                         ActionWatching.TimeLastActionUsed = DateTime.Now; //Hacky workaround for TN jobs
                         actionID = All.SavageBlade;
@@ -250,6 +295,7 @@ public abstract class WrathOpener
                     OpenerStep++;
                     CurrentOpenerAction = OpenerActions[OpenerStep - 1];
                 }
+
 
                 while (OpenerStep > 1 && !ActionReady(CurrentOpenerAction) &&
                        !SkipSteps.Any(x => x.Steps.Any(y => y == OpenerStep)) &&
@@ -370,13 +416,14 @@ public abstract class WrathOpener
 
 public class DummyOpener : WrathOpener
 {
-    public override List<uint> OpenerActions { get; set; } = [];
+    public override List<uint> OpenerActions { get; set; } = new List<uint>();
     public override int MinOpenerLevel => 1;
     public override int MaxOpenerLevel => 10000;
 
-    public override Preset Preset { get; }
+    public override Preset Preset { get; } = default;
 
     internal override UserData? ContentCheckConfig => null;
+    internal override bool IncludePot => false;
 
     public override bool HasCooldowns() => false;
 }

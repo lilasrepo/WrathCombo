@@ -1,4 +1,4 @@
-#region
+﻿#region
 using ECommons.GameFunctions;
 using System.Linq;
 using WrathCombo.AutoRotation;
@@ -279,7 +279,7 @@ internal partial class WHM : Healer
         protected internal override Preset Preset => Preset.WHM_AoE_DPS;
 
         private static int AssizeCount =>
-            ActionWatching.CombatActions.Count(x => x == Assize);
+            ActionWatching.CombatActions.Count(x => x.ActionID == Assize);
 
         protected override uint Invoke(uint actionID)
         {

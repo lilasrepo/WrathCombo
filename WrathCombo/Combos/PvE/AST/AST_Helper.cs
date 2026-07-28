@@ -1,4 +1,4 @@
-using Dalamud.Game.ClientState.Conditions;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.JobGauge.Enums;
 using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.Types;
@@ -18,8 +18,11 @@ using WrathCombo.Data;
 using WrathCombo.Extensions;
 using static WrathCombo.Combos.PvE.AST.Config;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
-// API12: disambiguate Status (Dalamud status-effect class vs Lumina.Excel.Sheets.Status row type).
+// api13: Dalamud has no IStatus -- only Dalamud.Game.ClientState.Statuses.Status
+// (Cecil-verified against TC_ok/_dalamud_api13/Dalamud.dll). Alias kept; upstream's
+// new ALL using merged in alongside it.
 using Status = Dalamud.Game.ClientState.Statuses.Status;
+using WrathCombo.Combos.PvE.ALL;
 namespace WrathCombo.Combos.PvE;
 
 internal partial class AST
@@ -415,7 +418,7 @@ internal partial class AST
                 filter = filter
                     .OrderBy(x =>
                         _cardPriorities.GetValueOrDefault(
-                            (Job)x.RealJob!.Value.RowId, byte.MaxValue))
+                            x.RealJob!.Value.GetJob().GetUpgradedJob(), byte.MaxValue))
                     .ThenByDescending(x => x.BattleChara.MaxHp)
                     .ToList();
                 
@@ -499,6 +502,7 @@ internal partial class AST
         [
             EarthlyStar,
             FallMalefic,
+            Items.UseItem(Items.GetStrongestPotionRow(Items.PotionType.Mind)),
             Combust3,
             Lightspeed,
             FallMalefic,
@@ -525,6 +529,7 @@ internal partial class AST
         public override Preset Preset => Preset.AST_ST_DPS_Opener;
 
         internal override UserData? ContentCheckConfig => AST_ST_DPS_Balance_Content;
+        internal override bool IncludePot => AST_Opener_Potion;
         
         public override List<(int[] Steps, Func<bool> Condition)> SkipSteps { get; set; } =
         [
