@@ -5,6 +5,7 @@ using ECommons.ExcelServices;
 using ECommons.GameFunctions;
 using ECommons.GameHelpers;
 using System.Linq;
+using WrathCombo.Extensions;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
 
 namespace WrathCombo.Data.BattleData
@@ -27,15 +28,29 @@ namespace WrathCombo.Data.BattleData
                     break;
                 case 846: // Crown of the Immaculate (normal)
 
-                    _invincibleCheck = (tar, id, _) =>
+                    _invincibleCheck = (target, targetID, _) =>
                     {
-                        if (Svc.Objects.OfType<IBattleChara>().TryGetFirst(y => y.BaseId == 11247, out var venery))
+                        // During the phase where Venery is not targettable and going to eat the shames, check for a tether vfx
+                        if (targetID is 11246 && // Shames
+                           Svc.Objects.GetBattleCharas().FirstOrDefault(x => x.BaseId is 11247 && !x.IsTargetable) is { } venery) // Venery
                         {
-                            return venery.IsCasting && tar.GameObjectId != venery.CastTargetObjectId ? Invincible.True : Invincible.False;
+                            // TC: upstream's target.GetTethers() does not exist in this tree (not in
+                            // Dalamud api13, not in the vendored walk-back ECommons), so the tether-vfx
+                            // test is unavailable. Keep TC's approximation -- Venery is eating a Shame
+                            // when it is casting at something other than this target. The enclosing
+                            // guard above is upstream's, re-bound to `venery` so this can read it.
+                            return Result(venery.IsCasting && target.GameObjectId != venery.CastTargetObjectId);
                         }
 
                         return Invincible.False;
                     };
+
+                    _pauseActions = () =>
+                    {
+                        if (CheckForGazeCasts(10491, 16025)) return true; // Chonky Innocence casting Enthrall
+                        return false;
+                    };
+
                     break;
                 case 887: // The Epic of Alexander (Ultimate)
                           // Jagd Doll = NameId 3759

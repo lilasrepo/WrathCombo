@@ -313,7 +313,7 @@ internal unsafe class AutoRotationController
                 var act = spell;
                 if (act == AST.Bole) act = AST.Play2;
                 if (act == AST.Spire) act = AST.Play3;
-                WouldLikeToGroundTarget = ActionSheet[act].TargetArea;
+                WouldLikeToGroundTarget = ActionSheet.TryGetValue(act, out var s) && s.TargetArea;
                 ActionManager.Instance()->UseAction(ActionType.Action, act is SGE.Eukrasia ? act.Retarget(SimpleTarget.Self) : act.Retarget(safeGameObjectId.GetObject()), safeGameObjectId!.Value);
                 WouldLikeToGroundTarget = false;
                 if (act != SGE.Eukrasia)
@@ -380,7 +380,7 @@ internal unsafe class AutoRotationController
 
             if (AbleToCast(spell))
             {
-                WouldLikeToGroundTarget = ActionSheet[spell].TargetArea;
+                WouldLikeToGroundTarget = ActionSheet.TryGetValue(spell, out var s) && s.TargetArea;
                 ActionManager.Instance()->UseAction(ActionType.Action, spell);
                 WouldLikeToGroundTarget = false;
                 return;
@@ -840,7 +840,7 @@ internal unsafe class AutoRotationController
 
                     var targetId = player.GameObjectId;
                     var changed = CheckForChangedTarget(gameAct, ref targetId, out var replacedWith);
-                    WouldLikeToGroundTarget = ActionSheet[outAct].TargetArea;
+                    WouldLikeToGroundTarget = ActionSheet.TryGetValue(outAct, out var s) && s.TargetArea;
                     var ret = ActionManager.Instance()->UseAction(ActionType.Action, Service.Configuration.ActionChanging ? gameAct : outAct, targetId);
                     WouldLikeToGroundTarget = false;
 
@@ -874,8 +874,8 @@ internal unsafe class AutoRotationController
                 if (!canQueue)
                     return false;
 
-                var sheet = ActionSheet[outAct];
-                var targetsHostile = sheet.CanTargetHostile;
+                var s = ActionSheet.TryGetValue(outAct, out var sheet);
+                var targetsHostile = s && sheet.CanTargetHostile;
 
                 bool switched = SwitchOnDChole(attributes, outAct, ref target);
                 var castTime = ActionManager.GetAdjustedCastTime(ActionType.Action, outAct);
@@ -887,8 +887,8 @@ internal unsafe class AutoRotationController
                 if (cfg.DPSSettings.DPSAlwaysHardTarget && OverrideTarget is not null)
                     Svc.Targets.Target = OverrideTarget;
 
-                var canUseSelf = sheet.CanTargetSelf;
-                var areaTargeted = ActionSheet[outAct].TargetArea;
+                var canUseSelf = s && sheet.CanTargetSelf;
+                var areaTargeted = s && sheet.TargetArea;
                 var acRangeCheck = ActionManager.GetActionInRangeOrLoS(outAct, player.GameObject(), OverrideTarget is null ? player.GameObject() : OverrideTarget.Struct());
                 var inRange = acRangeCheck is 0 or 565 || canUseSelf || areaTargeted;
 
@@ -968,7 +968,7 @@ internal unsafe class AutoRotationController
             if (target is null && !canUseSelf)
                 return false;
 
-            var areaTargeted = ActionSheet[outAct].TargetArea;
+            var areaTargeted = ActionSheet.TryGetValue(outAct, out var s) && s.TargetArea;
             var canUseTarget = target is not null && ActionManager.CanUseActionOnTarget(outAct, target.Struct());
 
             var acRangeCheck = ActionManager.GetActionInRangeOrLoS(outAct, player.GameObject(), target is null ? player.GameObject() : target.Struct());
@@ -992,7 +992,7 @@ internal unsafe class AutoRotationController
             {
                 var targetId = canUseTarget || areaTargeted ? target.GameObjectId : canUseSelf ? player.GameObjectId : 0xE000_0000;
                 var changed = CheckForChangedTarget(gameAct, ref targetId, out var replacedWith);
-                WouldLikeToGroundTarget = ActionSheet[outAct].TargetArea;
+                WouldLikeToGroundTarget = areaTargeted;
                 var ret = ActionManager.Instance()->UseAction(ActionType.Action, Service.Configuration.ActionChanging ? gameAct : outAct, targetId);
                 WouldLikeToGroundTarget = false;
 
