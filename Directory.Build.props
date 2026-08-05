@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
     <!-- Duplicated from TC_forward\Directory.Build.props (this file shadows it): strip
          the local source-root prefix out of shipped PDBs / runtime stack traces, and
          stop SourceLink embedding the repo root + submodule SHAs into the PDB. -->
@@ -7,6 +7,8 @@
         <PathMap>$(MSBuildThisFileDirectory)=/</PathMap>
         <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
         <EnableSourceLink>false</EnableSourceLink>
+        <!-- GitInfo runs git on the enclosing repo independently of SourceLink; see TC_forward/Directory.Build.props -->
+        <GitThisAssembly>false</GitThisAssembly>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -1,0 +1,5 @@
+﻿# Pinned 2026-08-01: WrathCombo carries its own Directory.Build.props, which SHADOWS
+# TC_forward/Directory.Build.props. It must keep the PathMap / SourceLink / GitThisAssembly
+# hygiene block or the plugin ships absolute local paths. It has survived on 3-way merge luck
+# so far; Questionable's copy did not (see commit 336e4b26). Pin it.
+Directory.Build.props
