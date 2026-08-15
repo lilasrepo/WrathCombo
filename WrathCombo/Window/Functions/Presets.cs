@@ -34,11 +34,52 @@ internal class Presets : ConfigWindow
 
     private static bool _animFrame = false;
     public static bool UpdateDue = true;
+
+    // TODO(api13): what this cache was built for -- null job = built while no player
+    // was available. See the self-heal check in GetJobAutorots below.
+    private static (Job? job, bool inPvP) _builtFor = (null, false);
+
     internal static Dictionary<Preset, bool> GetJobAutorots
     {
         get
         {
             field ??= [];
+
+            // TODO(api13): this cache is filtered by Player.Job + InPvP() below, but the
+            // only things that set UpdateDue are UI preset/Auto-Mode toggles, lease
+            // add/remove, and UpdateCaches' `onJobChange || firstRun` branch -- nothing
+            // fires on territory change. Worse, UpdateActiveJobPresets() recomputes
+            // IMMEDIATELY, so a refresh landing while the player is unavailable (zone
+            // transition into a duty) filters every preset out and latches an EMPTY
+            // dictionary. AutoRotationController._autoActions reads exactly this, so
+            // Auto-Rotation then reports On, holds a valid AutoDuty IPC lease, executes
+            // nothing, and logs nothing -- DTR shows "(0 active)" (runtime-observed
+            // 2026-08-15: two minutes in combat, zero casts; toggling any combo's
+            // Auto-Mode fixed it purely by setting UpdateDue again).
+            // Self-heal (a): the live job/PvP state moved away from what the cache was
+            // built for, which also covers the built-with-no-player case.
+            var liveFor = (job: Player.Available ? Player.Job : (Job?)null,
+                           inPvP: CustomComboFunctions.InPvP());
+            var stale = _builtFor != liveFor;
+
+            // NOT a staleness signal: an empty result. The filter below also requires
+            // CustomComboFunctions.IsEnabled(preset), so a user whose combos are
+            // Auto-Mode=true but Enabled=false (EnabledActions empty) legitimately has
+            // zero here, and only gets a non-zero count while an AutoDuty lease has the
+            // job's combos turned on. Retrying on empty would rebuild ~1800 presets
+            // every few seconds forever in that perfectly normal state.
+            if (stale)
+            {
+                // Must invalidate the UPSTREAM cache too. This derives from
+                // P.IPCSearch.AutoActions -> PresetStates, itself UpdateDue-gated and
+                // latched on first read; rebuilding only this side re-reads the same
+                // stale data. That is exactly why the first pass at this fix restored
+                // auto-rotation (GetJobAutorots did rebuild) yet left DTR at 0
+                // (PresetStates never did). UpdateActiveJobPresets() sets both flags,
+                // which is why an AutoDuty lease or a UI toggle "fixes" the readout.
+                P.IPCSearch.UpdateDue = true;
+                UpdateDue = true;
+            }
 
             if (UpdateDue)
             {
@@ -68,6 +109,7 @@ internal class Presets : ConfigWindow
                 })
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
+                _builtFor = liveFor;
                 UpdateDue = false;
             }
 

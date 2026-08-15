@@ -155,6 +155,9 @@ public static class ActionWatching
         Svc.Log.Verbose($"[ActorControl] {entityId} {category} {arg1} {arg2} {arg3} {arg4} {arg5} {arg6} {arg7} {arg8} {targetId.Id} {isRecorded}");
         ActorControlPacketHook.Original(entityId, category, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, targetId, isRecorded);
 
+        if (category == 20 && OccultCrescent.StatusIsElementalWeakness(arg1))
+            OccultCrescent.CacheWeakness(targetId.Id.GetObject(), arg1);
+
         if (category == 1541) // Dots
             SimpleTargetState.UpdatePeriodicHealthChange(entityId, arg2, true);
 
@@ -722,7 +725,7 @@ public static class ActionWatching
             target is null)
             return false;
 
-        if (actionId == OccultCrescent.Revive)
+        if (actionId == OccultCrescent.Revive || actionId == OccultCrescent.OccultRaise)
         {
             target = SimpleTarget.Stack.AllyToRaise;
             if (target is null) return false;

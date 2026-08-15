@@ -24,7 +24,45 @@ namespace WrathCombo.Data.Conflicts;
 public static class ConflictingPluginsChecks
 {
     private static bool _cancelConflictChecks;
-    
+
+    // TODO(api13): each probe must be isolated. Upstream wraps all nine CheckForConflict
+    // calls in ONE try/catch (and ForceRunChecks in none at all), with BossMod first. On
+    // TC, BossModIPC.GetTickService() reflects for "BossMod.Services.TickService", which
+    // this generation's walked-back BossMod does not have -- it returns null and the next
+    // dereference throws on EVERY cycle, so the single catch swallowed it and the other
+    // eight probes never ran. Runtime-observed 2026-08-15: 185 identical
+    // "Periodic check failed (async plugin?)" warnings in four minutes, no other plugin
+    // ever evaluated. (Only conflict WARNINGS are lost -- none of these flags gate
+    // auto-rotation -- but the whole subsystem was silently dead.) Isolating per probe
+    // keeps one broken reflection target from blinding the rest, names the culprit, and
+    // throttles the log so a permanently-absent type cannot spam every 4s.
+    private static void RunCheck(string name, Action check)
+    {
+        try
+        {
+            check();
+        }
+        catch (Exception ex)
+        {
+            if (EZ.Throttle($"conflictCheckFailed_{name}", (int)TS.FromMinutes(1).TotalMilliseconds))
+                PluginLog.Warning(
+                    $"[ConflictingPlugins] [{name}] check failed, skipping it: {ex.Message}");
+        }
+    }
+
+    private static void RunAllChecks(bool force)
+    {
+        RunCheck(nameof(BossMod), () => BossMod.CheckForConflict(force));
+        RunCheck(nameof(BossModReborn), () => BossModReborn.CheckForConflict(force));
+        RunCheck(nameof(Redirect), () => Redirect.CheckForConflict(force));
+        RunCheck(nameof(ReAction), () => ReAction.CheckForConflict(force));
+        RunCheck(nameof(ReActionEx), () => ReActionEx.CheckForConflict(force));
+        RunCheck(nameof(MOAction), () => MOAction.CheckForConflict(force));
+        RunCheck(nameof(Wrath), () => Wrath.CheckForConflict(force));
+        RunCheck(nameof(XIV), () => XIV.CheckForConflict(force));
+        RunCheck(nameof(Dalamud), () => Dalamud.CheckForConflict(force));
+    }
+
     internal static readonly Action ForceRunChecks = () =>
     {
         if (_cancelConflictChecks)
@@ -33,15 +71,7 @@ public static class ConflictingPluginsChecks
         PluginLog.Verbose(
             "[ConflictingPlugins] Forcing immediate check for conflicting plugins");
 
-        BossMod.CheckForConflict(true);
-        BossModReborn.CheckForConflict(true);
-        Redirect.CheckForConflict(true);
-        ReAction.CheckForConflict(true);
-        ReActionEx.CheckForConflict(true);
-        MOAction.CheckForConflict(true);
-        Wrath.CheckForConflict(true);
-        XIV.CheckForConflict(true);
-        Dalamud.CheckForConflict(true);
+        RunAllChecks(true);
     };
 
     private static readonly Action RunChecks = () =>
@@ -52,23 +82,7 @@ public static class ConflictingPluginsChecks
         PluginLog.Verbose(
             "[ConflictingPlugins] Periodic check for conflicting plugins");
 
-        try
-        {
-            BossMod.CheckForConflict();
-            BossModReborn.CheckForConflict();
-            Redirect.CheckForConflict();
-            ReAction.CheckForConflict();
-            ReActionEx.CheckForConflict();
-            MOAction.CheckForConflict();
-            Wrath.CheckForConflict();
-            XIV.CheckForConflict();
-            Dalamud.CheckForConflict();
-        }
-        catch
-        {
-            PluginLog.Warning(
-                "[ConflictingPlugins] Periodic check failed (async plugin?)");
-        }
+        RunAllChecks(false);
 
         Svc.Framework.RunOnTick(RunChecks!, TS.FromSeconds(4.11));
     };

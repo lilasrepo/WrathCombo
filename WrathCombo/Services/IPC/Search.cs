@@ -316,10 +316,18 @@ public class Search(Leasing leasing)
     {
         Window.Functions.Presets.UpdateDue = true;
         P.IPCSearch.UpdateDue = true;
-        ActiveJobPresets = Window.Functions.Presets.GetJobAutorots.Count;
+        // Force the rebuild now, as upstream does. Safe since GetJobAutorots
+        // self-heals a rebuild that lands while no player is available.
+        _ = Window.Functions.Presets.GetJobAutorots.Count;
     }
 
-    internal int ActiveJobPresets;
+    // TODO(api13): was a plain int assigned only inside UpdateActiveJobPresets(), so
+    // the DTR readout ("Wrath: On (N active)") went stale the moment GetJobAutorots
+    // changed without going through that method -- which is exactly what the
+    // territory-change self-heal added to GetJobAutorots does. Observed 2026-08-15:
+    // auto-rotation correctly executing while DTR still read "(0 active)". Reading
+    // the live count keeps the readout honest; it is the same cache either way.
+    internal int ActiveJobPresets => Window.Functions.Presets.GetJobAutorots.Count;
 
     #endregion
 

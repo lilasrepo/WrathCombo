@@ -1,5 +1,8 @@
-﻿# Pinned 2026-08-01: WrathCombo carries its own Directory.Build.props, which SHADOWS
-# TC_forward/Directory.Build.props. It must keep the PathMap / SourceLink / GitThisAssembly
-# hygiene block or the plugin ships absolute local paths. It has survived on 3-way merge luck
-# so far; Questionable's copy did not (see commit 336e4b26). Pin it.
-Directory.Build.props
+# Pinned 2026-08-15: TC-managed <Version>. Upstream leaves <Version> at 1.0.4.20 across
+# releases, so without this pin every refresh resets the TC reserved-revision block
+# (1.0.4.2001) back to upstream's static number, the publisher re-clobbers the same tag,
+# and installed clients are never offered the update. Moves WrathCombo out of the
+# TRACKS_UPSTREAM set into the TC-managed-version set (see plugin_update SKILL.md §5d,
+# memory project_lilasrepo_version_pins). Everything else in this csproj is still
+# re-established by the mechanical transforms after take-theirs.
+WrathCombo/WrathCombo.csproj

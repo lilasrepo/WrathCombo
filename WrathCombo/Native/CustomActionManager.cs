@@ -6,6 +6,7 @@ using Dalamud.Plugin.Services;
 using ECommons;
 using ECommons.DalamudServices;
 using ECommons.EzHookManager;
+using FFXIVClientStructs.FFXIV.Client.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -55,18 +56,19 @@ public sealed unsafe class CustomAction : IDisposable
         CustomActionManager.CustomActionRow* row = (CustomActionManager.CustomActionRow*)ActionRowPtr;
         row->NameOffset = (uint)rowSize;
         row->Icon = (ushort)IconId;
-        row->ActionCategory = 4;
+        row->ActionCategory = 13;
         row->PrimaryCostType = 0;
         row->PrimaryCostValue = 0;
         row->Cast100ms = 0;
         row->Recast100ms = 0;
-        row->CooldownGroup = 58;
+        row->CooldownGroup = 0;
         row->AdditionalRecastGroup = 0;
         row->MaxCharges = 1;
         row->ClassJobCategory = 1;
         row->ClassJob = -1;
         row->Range = 0;
         row->CastType = 1;
+        row->TargetBools |= 0x08;
         nameUtf8.CopyTo(new Span<byte>((void*)(ActionRowPtr + (nint)rowSize), nameUtf8.Length));
 
         byte[] descBytes = Encoding.UTF8.GetBytes(Description);
@@ -190,6 +192,26 @@ public sealed unsafe class CustomActionManager : IDisposable
     {
         _framework.Update -= OnFrameworkUpdate;
 
+        AgentActionDetail* detailAgent = AgentActionDetail.Instance();
+        if (detailAgent != null && _actions.ContainsKey(detailAgent->ActionId))
+        {
+            detailAgent->Hide();
+            // porting-note(api13): upstream's FFXIVClientStructs types this field as the
+            // superset DetailKind (which has None = 0); api13's CS types it as the narrower
+            // ActionKind, whose members start at Action = 28 and include no None. The two
+            // enums share numeric values. `default` is 0 -- same result as upstream's
+            // DetailKind.None -- and avoids naming ActionKind, which is ambiguous here
+            // between the FFXIVClientStructs and Dalamud namespaces this file imports.
+            detailAgent->ActionKind = default;
+            detailAgent->ActionId = 0;
+            detailAgent->OriginalId = 0;
+            detailAgent->AdjustedId = 0;
+        }
+
+        // porting-note(api13): null-conditional is TC-side and must survive. The five
+        // hooks are set up inside a try/catch because their game-7.5 sigs are absent on
+        // TC's game version -- on a failed scan they stay null, and upstream's bare
+        // .Dispose() would NRE here and take the whole plugin's teardown with it.
         _getActionRowHook?.Dispose();
         _isSlotUsableHook?.Dispose();
         _loadIconHook?.Dispose();
@@ -238,17 +260,6 @@ public sealed unsafe class CustomActionManager : IDisposable
         }
     }
 
-    public void ReRegisterItem(uint itemId, ushort iconId)
-    {
-        var act = _actions[All.Items];
-        if (_texProv.TryGetFromGameIcon(new GameIconLookup() { IconId = iconId, ItemHq = false }, out var tex))
-        {
-            var clone = new CustomAction(act.Id, act.Name, act.Description, iconId, act.OnClick, act.CustomIconPath, itemId, tex);
-            act.Dispose();
-            Register(clone);
-        }
-    }
-
     public void ClearPendingInjects() => _pendingInjects.Clear();
 
     private CustomActionRow* GetActionRowDetour(uint rowId)
@@ -273,7 +284,7 @@ public sealed unsafe class CustomActionManager : IDisposable
                                     uint actionId)
     {
         if (type == RaptureHotbarModule.HotbarSlotType.Action &&
-            _actions.ContainsKey(actionId))
+            _actions.ContainsKey(actionId) && actionId != All.Cease)
         {
             return true;
         }
@@ -370,6 +381,7 @@ public sealed unsafe class CustomActionManager : IDisposable
         [FieldOffset(0x33)] public byte ClassJobCategory;
         [FieldOffset(0x37)] public sbyte ClassJob;
         [FieldOffset(0x38)] public sbyte Range;
+        [FieldOffset(0x3B)] public byte TargetBools;
     }
 
     private delegate CustomActionRow* GetActionRowDelegate(uint rowId);

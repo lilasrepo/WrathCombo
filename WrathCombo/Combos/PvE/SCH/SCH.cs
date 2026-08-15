@@ -28,7 +28,7 @@ internal partial class SCH : Healer
                 return SummonEos;
 
             #region Special Content
-            if (ContentSpecificActions.TryGet(out var contentAction))
+            if (ContentSpecificActions.TryGet(ref actionID, out uint contentAction))
                 return contentAction;
             #endregion
 
@@ -83,7 +83,7 @@ internal partial class SCH : Healer
                 return SummonEos;
 
             #region Special Content
-            if (ContentSpecificActions.TryGet(out var contentAction))
+            if (ContentSpecificActions.TryGet(ref actionID, out uint contentAction))
                 return contentAction;
             #endregion
 
@@ -295,7 +295,7 @@ internal partial class SCH : Healer
                 return actionID;
 
             #region Special Content
-            if (ContentSpecificActions.TryGet(out var contentAction))
+            if (ContentSpecificActions.TryGet(ref actionID, out uint contentAction))
                 return contentAction;
             #endregion
 
@@ -376,7 +376,7 @@ internal partial class SCH : Healer
                 return SummonEos;
 
             #region Special Content
-            if (ContentSpecificActions.TryGet(out var contentAction))
+            if (ContentSpecificActions.TryGet(ref actionID, out uint contentAction))
                 return contentAction;
             #endregion
 
