@@ -482,6 +482,7 @@ public class CustomActionSettings()
 
 public enum CustomActionType
 {
+    None = 0,
     SingleTargetDPS = 1,
     AoEDPS = 2,
     SingleTargetHeals = 3,
@@ -554,8 +555,11 @@ public class CustomActionHelper()
         };
     }
 
-    internal static CustomActionType GetTypeByAttribute(AutoActionAttribute attribute)
+    internal static CustomActionType GetTypeByAttribute(AutoActionAttribute? attribute)
     {
+        if (attribute == null)
+            return CustomActionType.None;
+
         return (attribute.IsAoE, attribute.IsHeal) switch
         {
             (true, true) => CustomActionType.AoEHeals,

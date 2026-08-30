@@ -39,7 +39,7 @@ public abstract class WrathOpener
                 }
 
                 PreviousOpenerAction = CurrentOpenerAction;
-                CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
             }
         }
         else
@@ -54,7 +54,7 @@ public abstract class WrathOpener
                 }
 
                 PreviousOpenerAction = CurrentOpenerAction;
-                CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
             }
         }
     }
@@ -123,7 +123,7 @@ public abstract class WrathOpener
         }
     }
 
-    public abstract List<uint> OpenerActions { get; set; }
+    public abstract List<Func<uint>> OpenerActions { get; set; }
 
     public virtual List<int> DelayedWeaveSteps { get; set; } = new List<int>();
     public virtual List<int> VeryDelayedWeaveSteps { get; set; } = new List<int>(); //for very late-weaving
@@ -191,11 +191,11 @@ public abstract class WrathOpener
 
         if (CurrentState == OpenerState.OpenerNotReady)
         {
-            if (HasCooldowns() && !InCombat())
+            if (HasCooldowns() && (!InCombat() || AllowReopener))
             {
                 CurrentState = OpenerState.OpenerReady;
                 OpenerStep = 1;
-                CurrentOpenerAction = OpenerActions.First();
+                CurrentOpenerAction = OpenerActions.First().Invoke();
             }
         }
 
@@ -230,7 +230,7 @@ public abstract class WrathOpener
                 {
                     Svc.Log.Debug($"Skipping item {CurrentOpenerAction.ActionName()} at step {OpenerStep}");
                     OpenerStep++;
-                    CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                    CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
                 }
 
                 bool skipped = false;
@@ -256,7 +256,7 @@ public abstract class WrathOpener
                     return true;
                 }
 
-                actionID = CurrentOpenerAction = AllowUpgradeSteps.Any(x => x == OpenerStep) ? OriginalHook(OpenerActions[OpenerStep - 1]) : OpenerActions[OpenerStep - 1];
+                actionID = CurrentOpenerAction = AllowUpgradeSteps.Any(x => x == OpenerStep) ? OriginalHook(OpenerActions[OpenerStep - 1].Invoke()) : OpenerActions[OpenerStep - 1].Invoke();
 
                 float startValue = (VeryDelayedWeaveSteps.Any(x => x == OpenerStep)) ? 1f : 1.25f;
                 if ((DelayedWeaveSteps.Any(x => x == OpenerStep) || VeryDelayedWeaveSteps.Any(x => x == OpenerStep)) && !CanDelayedWeave(startValue, 0) && RemainingGCD > 0)
@@ -273,7 +273,7 @@ public abstract class WrathOpener
                         break;
                     }
                     else
-                        CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                        CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
                 }
 
                 foreach (var (Steps, HoldDelay) in PrepullDelays.Where(x => x.Steps.Any(y => y == OpenerStep)))
@@ -296,7 +296,7 @@ public abstract class WrathOpener
                 if (CurrentOpenerAction == RoleActions.Melee.TrueNorth && !TargetNeedsPositionals())
                 {
                     OpenerStep++;
-                    CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                    CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
                 }
 
 
@@ -310,7 +310,7 @@ public abstract class WrathOpener
                     Svc.Log.Debug($"Skipping {CurrentOpenerAction.ActionName()}");
                     OpenerStep++;
 
-                    CurrentOpenerAction = OpenerActions[OpenerStep - 1];
+                    CurrentOpenerAction = OpenerActions[OpenerStep - 1].Invoke();
                 }
 
 
@@ -337,6 +337,7 @@ public abstract class WrathOpener
         {
             Job.AST => AST.Opener(),
             Job.BLM => BLM.Opener(),
+            Job.BLU => BLU.Opener(),
             Job.BRD => BRD.Opener(),
             Job.DRG => DRG.Opener(),
             Job.DNC => DNC.Opener(),
@@ -419,7 +420,7 @@ public abstract class WrathOpener
 
 public class DummyOpener : WrathOpener
 {
-    public override List<uint> OpenerActions { get; set; } = new List<uint>();
+    public override List<Func<uint>> OpenerActions { get; set; } = new List<Func<uint>>();
     public override int MinOpenerLevel => 1;
     public override int MaxOpenerLevel => 10000;
 

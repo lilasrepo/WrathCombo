@@ -188,6 +188,54 @@ public static partial class WrathIPCWrapper
                 Interface!.GetIpcSubscriber<Guid, string, bool, SetResult>
                     ($"{WC}SetComboOptionState");
 
+        [Obsolete("Use WrathIPCWrapper.GetVariantParentComboName instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<uint, string?>
+            GetVariantParentComboName =
+                Interface!.GetIpcSubscriber<uint, string?>
+                    ($"{WC}GetVariantParentComboName");
+
+        [Obsolete("Use WrathIPCWrapper.GetVariantOptionNames instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<uint, List<string>?>
+            GetVariantOptionNames =
+                Interface!.GetIpcSubscriber<uint, List<string>?>
+                    ($"{WC}GetVariantOptionNames");
+
+        [Obsolete("Use WrathIPCWrapper.SetVariantReadyForJob instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<Guid, uint, bool, SetResult>
+            SetVariantReadyForJob =
+                Interface!.GetIpcSubscriber<Guid, uint, bool, SetResult>
+                    ($"{WC}SetVariantReadyForJob");
+
+        [Obsolete("Use WrathIPCWrapper.GetOccultParentComboName instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<uint, string?>
+            GetOccultParentComboName =
+                Interface!.GetIpcSubscriber<uint, string?>
+                    ($"{WC}GetOccultParentComboName");
+
+        [Obsolete("Use WrathIPCWrapper.GetOccultOptionNames instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<uint, List<string>?>
+            GetOccultOptionNames =
+                Interface!.GetIpcSubscriber<uint, List<string>?>
+                    ($"{WC}GetOccultOptionNames");
+
+        [Obsolete("Use WrathIPCWrapper.SetOccultReadyForPhantomJob instead. " +
+                  "Will be made internal in 1.1.0.")]
+        public static readonly
+            ICallGateSubscriber<Guid, uint, bool, SetResult>
+            SetOccultReadyForPhantomJob =
+                Interface!.GetIpcSubscriber<Guid, uint, bool, SetResult>
+                    ($"{WC}SetOccultReadyForPhantomJob");
+
         #endregion
     }
 }

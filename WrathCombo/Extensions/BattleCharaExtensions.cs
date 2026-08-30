@@ -1,12 +1,25 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
+using ECommons;
 using ECommons.GameFunctions;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using WrathCombo.CustomComboNS.Functions;
 namespace WrathCombo.Extensions;
 
 internal static class BattleCharaExtensions
 {
+    // gap-fill 2026-08-30: upstream now calls IBattleChara.Health() and .RemainingCastTime(). Both are
+    // ECommons-HEAD extension members that the walk-back ECommons does not carry, and neither exists
+    // on api13's IBattleChara. Defined here with the conventions WrathCombo already uses elsewhere:
+    // Health is an HP PERCENTAGE (Target.cs:271 computes CurrentHp * 100f / MaxHp), and cast time
+    // remaining is total minus elapsed.
+    public static float Health(this IBattleChara chara) =>
+        chara is null || chara.MaxHp == 0 ? 0f : chara.CurrentHp * 100f / chara.MaxHp;
+
+    public static float RemainingCastTime(this IBattleChara chara) =>
+        chara is null ? 0f : chara.TotalCastTime - chara.CurrentCastTime;
+
     public unsafe static CombatRole GetRole(this WrathPartyMember chara)
     {
         if (chara.RealJob?.Role == 1) return CombatRole.Tank;
@@ -15,31 +28,48 @@ internal static class BattleCharaExtensions
         if (chara.RealJob?.Role == 4) return CombatRole.Healer;
         return CombatRole.NonCombat;
     }
-    public unsafe static uint RawShieldValue(this IBattleChara chara)
-    {
-        FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara* baseVal = (FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara*)chara.Address;
-        var value = baseVal->Character.CharacterData.ShieldValue;
-        var rawValue = chara.MaxHp / 100 * value;
 
-        return rawValue;
+    extension(IBattleChara chara)
+    {
+        public unsafe uint RawShieldValue()
+        {
+            FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara* baseVal = (FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara*)chara.Address;
+            var value = baseVal->Character.CharacterData.ShieldValue;
+            var rawValue = chara.MaxHp / 100 * value;
+
+            return rawValue;
+        }
+
+        public unsafe byte ShieldPercentage()
+        {
+            FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara* baseVal = (FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara*)chara.Address;
+            var value = baseVal->Character.CharacterData.ShieldValue;
+
+            return value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasShield() => chara.RawShieldValue() > 0;
+
+        public string GetInitials()
+        {
+            var ret = string.Concat(chara.Name.TextValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(x => x.Length >= 1 && char.IsLetter(x[0]))
+                .Select(x => char.ToUpper(x[0])));
+
+            return ret;
+        }
     }
 
-    public unsafe static byte ShieldPercentage(this IBattleChara chara)
+    extension (IBattleChara? chara)
     {
-        FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara* baseVal = (FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara*)chara.Address;
-        var value = baseVal->Character.CharacterData.ShieldValue;
-
-        return value;
-    }
-
-    public static bool HasShield(this IBattleChara chara) => chara.RawShieldValue() > 0;
-
-    public static string GetInitials(this IBattleChara chara)
-    {
-        var ret = string.Concat(chara.Name.TextValue.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-            .Where(x => x.Length >= 1 && char.IsLetter(x[0]))
-            .Select(x => char.ToUpper(x[0])));
-
-        return ret;
+        /// <summary>
+        ///     Can be chained onto a <see cref="IGameObject" /> to make it return
+        ///     <see langword="null" /> if the target is not below 99% HP.
+        /// </summary>
+        public IBattleChara? IfMissingHP(float missingHpp = 99) =>
+            chara is not null && chara.Health() <= missingHpp
+                ? chara
+                : null;
     }
 }

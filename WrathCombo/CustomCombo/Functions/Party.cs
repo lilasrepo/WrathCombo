@@ -79,7 +79,7 @@ internal abstract partial class CustomComboFunctions
             }
         }
 
-        if ((Service.Configuration.AddOutOfPartyNPCsToRetargeting) || (AutoRotationController.cfg?.Enabled == true && AutoRotationController.cfg.HealerSettings.IncludeNPCs && Player.Job.IsHealer()))
+        if ((Service.Configuration.AddOutOfPartyNPCsToRetargeting) || (AutoRotationController.cfg?.Enabled == true && AutoRotationController.cfg.HealerSettings.IncludeNPCs && (Player.Job.IsHealer() || (Player.Job is Job.BLU && BLU.HasHealerMimicry))))
         {
             foreach (var npc in Svc.Objects.OfType<IBattleNpc>().Where(x => !existingIds.Contains(x.GameObjectId)))
             {
@@ -87,7 +87,8 @@ internal abstract partial class CustomComboFunctions
                 // API12: use Dalamud's BattleNpcSubKind.Chocobo (CSStruct.Buddy equivalent).
                 if (npc.BattleNpcKind is BattleNpcSubKind.Chocobo && npc.OwnerId != Player.GameObject->GetGameObjectId()) continue; // Skips other players' chocobos
 
-                if (ActionManager.CanUseActionOnTarget(RoleActions.Healer.Esuna, npc.GameObject()))
+                uint friendCheck = Player.Job is Job.BLU ? BLU.PomCure : RoleActions.Healer.Esuna;
+                if (ActionManager.CanUseActionOnTarget(friendCheck, npc.GameObject()))
                 {
                     WrathPartyMember wmember = new()
                     {

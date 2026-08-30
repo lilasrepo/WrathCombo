@@ -40,6 +40,7 @@ using WrathCombo.Services.ActionRequestIPC;
 using WrathCombo.Services.IPC;
 using WrathCombo.Services.IPC_Subscriber;
 using WrathCombo.Window.Functions;
+using static WrathCombo.Combos.PvE.Content.DeepDungeons.DeepDungeons;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
 using Action = Lumina.Excel.Sheets.Action;
 using BattleNPCSubKind = Dalamud.Game.ClientState.Objects.Enums.BattleNpcSubKind;
@@ -190,8 +191,9 @@ internal class Debug : ConfigWindow, IDisposable
                     config = JsonConvert.DeserializeObject<Configuration>(decode);
                 }
                 // Fallback to decoding the non-decompressed data
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    ex.Log();
                     var decode = Encoding.UTF8.GetString(base64);
                     config = JsonConvert.DeserializeObject<Configuration>(decode);
                 }
@@ -554,6 +556,7 @@ internal class Debug : ConfigWindow, IDisposable
             CustomStyleText("GCD Total:", GCDTotal);
             CustomStyleText("GCD Remaining:", RemainingGCD);
             CustomStyleText("Queued Action:", ActionManager.Instance()->QueuedActionId.ActionName());
+            CustomStyleText("Queued Target ID:", ActionManager.Instance()->QueuedTargetId.Id);
             CustomStyleText("Animation Lock:", $"{ActionManager.Instance()->AnimationLock:F1}");
             CustomStyleText($"Duty Action 1:", $"{Action1.ActionName()}");
             CustomStyleText($"Duty Action 2:", $"{Action2.ActionName()}");
@@ -579,9 +582,16 @@ internal class Debug : ConfigWindow, IDisposable
                         WrathOpener.CurrentOpener.OpenerStep <
                         WrathOpener.CurrentOpener.OpenerActions.Count)
                     {
-                        CustomStyleText("Next Action:", WrathOpener.CurrentOpener.OpenerActions[WrathOpener.CurrentOpener.OpenerStep].ActionName());
+                        CustomStyleText("Next Action:", WrathOpener.CurrentOpener.OpenerActions[WrathOpener.CurrentOpener.OpenerStep].Invoke().ActionName());
                         CustomStyleText("Is Delayed Weave:", WrathOpener.CurrentOpener.DelayedWeaveSteps.Any(x => x == WrathOpener.CurrentOpener.OpenerStep));
                         CustomStyleText("Can Delayed Weave:", CanDelayedWeave(weaveEnd: 0.1f));
+                    }
+
+                    int stepIndex = 0;
+                    foreach (var action in WrathOpener.CurrentOpener.OpenerActions)
+                    {
+                        stepIndex++;
+                        CustomStyleText($"Opener Action {stepIndex}:", action.Invoke().ActionName());
                     }
                 }
 
@@ -767,6 +777,7 @@ internal class Debug : ConfigWindow, IDisposable
                 CustomStyleText("Max Charges:", $"{_debugSpell.Value.MaxCharges}");
                 CustomStyleText("Charges (Level):", $"{GetCooldown(_debugSpell.Value.RowId).MaxCharges}");
                 CustomStyleText("Charge CD:", $"{GetCooldown(_debugSpell.Value.RowId).ChargeCooldownRemaining}");
+                CustomStyleText("Action Learned", $"{ActionLearned(_debugSpell.Value.RowId)}");
                 CustomStyleText("Range:", $"{GetActionRange(_debugSpell.Value.RowId)}");
                 CustomStyleText("Effect Range:", $"{_debugSpell.Value.EffectRange}");
                 CustomStyleText("In Range:", $"{InActionRange(_debugSpell.Value.RowId)}");
@@ -791,7 +802,7 @@ internal class Debug : ConfigWindow, IDisposable
                 // Target Required
                 if (target is not null)
                 {
-                    var canUseOnTarget = ActionManager.CanUseActionOnTarget(_debugSpell.Value.RowId, target.Struct());
+                    var canUseOnTarget = ActionManager.CanUseActionOnTarget(_debugSpell.Value.RowId, target.GameObject());
                     CustomStyleText("Can Use on Target:", canUseOnTarget);
 
                     CustomStyleText($"Just Used on Target:", $"{JustUsedOn(_debugSpell.Value.RowId, target)}");
@@ -1364,7 +1375,7 @@ internal class Debug : ConfigWindow, IDisposable
             {
                 ImGuiEx.TextWrapped($"Mainly to be used with ARR and real party members since they don't actually get added to the party for some reason.");
                 ImGui.Separator();
-                foreach (var obj in Svc.Objects.Where(x => x.IsFriendly()))
+                foreach (var obj in Svc.Objects.GetBattleCharas().Where(x => x.IsFriendly()))
                 {
                     ImGui.Text($"{obj.Name} ({obj.GameObjectId})");
                     DrawVFXTree(obj);
@@ -1461,6 +1472,14 @@ internal class Debug : ConfigWindow, IDisposable
             foreach (var act in P.CustomActions.Manager.Actions)
             {
                 CustomStyleText($"{act.Name}", $"{act.Id}");
+            }
+        }
+
+        if (ImGui.CollapsingHeader("Deep Dungeons"))
+        {
+            foreach (var pomander in Enum.GetValues<Pomanders>())
+            {
+                CustomStyleText($"{pomander}", $"{PomanderCount(pomander)} Usable: {GetDDItemInfo(pomander).IsUsable}");
             }
         }
 
@@ -1610,6 +1629,25 @@ internal class Debug : ConfigWindow, IDisposable
                 CustomStyleText("No current leases.", "");
             }
 
+            for (uint i = 0; i <= 23; i++)
+            {
+                var names = P.IPCSearch.TryGetOccultParentComboName(i, out var s);
+                if (_wrathLease is { } l)
+                    if (ImGui.Button($"Set Phantom Job {s}"))
+                    {
+                        P.IPC.SetOccultReadyForPhantomJob(l, i, true);
+                    }
+                if (names)
+                {
+                    ImGui.Text($"{s}");
+                    var p = P.IPCSearch.GetOccultOptionNames(i);
+                    foreach (var st in p)
+                    {
+                        ImGui.Text($"- {st}");
+                    }
+                }
+            }
+
             ImGuiEx.Spacing(new Vector2(0f, SpacingSmall));
         }
 
@@ -1692,6 +1730,8 @@ internal class Debug : ConfigWindow, IDisposable
 
             CustomStyleText("Name:", target?.Name);
             CustomStyleText("Nameplate:", target?.GetNameplateKind().ToString());
+            CustomStyleText("NamePlate Icon ID:", GetNamePlateIconId(target));
+            CustomStyleText("Treasure Hunt Order:", GetTreasureHuntOrder(target));
             CustomStyleText("Rank:", $"{battleNPCRow?.Rank.ToString() ?? "null"} (found sheet: {(foundSheet is true ? "yes" : "no")})");
             CustomStyleText("Health:", $"{GetTargetCurrentHP(target, forceUsePending: false):N0} / {GetTargetMaxHP(target):N0} ({MathF.Round(GetTargetHPPercent(target, forceUsePending: false), 2)}%)");
             CustomStyleText("Health (with pending):", $"{GetTargetCurrentHP(target, forceUsePending: true):N0} / {GetTargetMaxHP(target):N0} ({MathF.Round(GetTargetHPPercent(target, forceUsePending: true), 2)}%)");
@@ -1701,10 +1741,10 @@ internal class Debug : ConfigWindow, IDisposable
             CustomStyleText("Height Difference:", $"{MathF.Round(GetTargetHeightDifference(target), 2)}y");
             CustomStyleText("Relative Position:", AngleToTarget(target).ToString());
             CustomStyleText("Requires Positionals:", TargetNeedsPositionals(target));
-            CustomStyleText("Is Invincible:", TargetIsInvincible(target!));
+            CustomStyleText("Is Invincible:", (target as IBattleChara)?.IsInvincible);
             CustomStyleText("Is Hostile:", target?.IsHostile());
-            CustomStyleText("Is Friendly:", target?.IsFriendly());
-            CustomStyleText("Is Boss:", target?.IsBoss());
+            CustomStyleText("Is Friendly:", (target as IBattleChara)?.IsFriendly());
+            CustomStyleText("Is Boss:", (target as IBattleChara)?.IsBoss());
             CustomStyleText("In Boss Encounter:", InBossEncounter());
 
             ImGuiEx.Spacing(new Vector2(0f, SpacingSmall));
@@ -1779,7 +1819,7 @@ internal class Debug : ConfigWindow, IDisposable
                 ImGui.TreePop();
             }
 
-            
+
 
             if (ImGui.TreeNode("Enemies Near Target"))
             {
@@ -1859,12 +1899,12 @@ internal class Debug : ConfigWindow, IDisposable
         {
             CustomStyleText($"Count:", $"{target.SafeStatusList?.Count(x => x.StatusId != 0)}");
             CustomStyleText($"NumValid:", $"{tar.Struct()->StatusManager.NumValidStatuses}");
-            CustomStyleText($"StatusCapped:", $"{CustomComboFunctions.TargetIsStatusCapped(tar)}");
+            CustomStyleText($"StatusCapped:", $"{tar.IsStatusCapped}");
             foreach (Status? status in tar.SafeStatusList)
             {
                 // Set Status
                 string statusId = status.StatusId.ToString();
-                string statusName = StatusCache.GetStatusName(status.StatusId) ?? string.Empty;
+                string statusName = status.Name ?? string.Empty;
 
                 // Set Source Name
                 string sourceName = status.SourceId != tar.GameObjectId
@@ -1872,7 +1912,7 @@ internal class Debug : ConfigWindow, IDisposable
                     : string.Empty;
 
                 // Set Duration
-                float statusDuration = GetStatusEffectRemainingTime((ushort)status.StatusId, anyOwner: true);
+                float statusDuration = status.RemainingTimeOrZero();
                 string formattedDuration = $"{SymbolDuration} {(statusDuration >= 60f
                     ? $"{(int)(statusDuration / 60f)}m"
                     : $"{statusDuration:F1}s")}";
