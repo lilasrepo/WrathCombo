@@ -143,7 +143,7 @@ internal abstract partial class CustomComboFunctions
                || Svc.Condition[ConditionFlag.CarryingItem]
                || Svc.Condition[ConditionFlag.CarryingObject]
                || Svc.Condition[ConditionFlag.BeingMoved]
-               // API12 B1: ConditionFlag.RidingPillion is API15-only (game 7.5).
+               || Svc.Condition[ConditionFlag.RidingPillion]
                || Svc.Condition[ConditionFlag.Mounting]
                || Svc.Condition[ConditionFlag.Mounting71]
                || Svc.Condition[ConditionFlag.ParticipatingInCustomMatch]

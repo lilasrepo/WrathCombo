@@ -12,7 +12,7 @@
              collide with upstream's next release; .2001 encodes "upstream 20, TC fix 1",
              stays monotonic, and upstream would need ~2000 releases to reach it. Re-base
              on the next upstream bump: 1.0.4.21 -> 1.0.4.2101. -->
-        <Version>1.0.4.2002</Version>
+        <Version>1.0.4.2003</Version>
         <!-- This is the version that will be used when pushing to the repo.-->
         <Description>XIVCombo for very lazy players</Description>
         <Copyright>Copyleft attick 2021 thanks attick UwU</Copyright>

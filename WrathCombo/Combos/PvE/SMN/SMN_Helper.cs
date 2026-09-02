@@ -11,7 +11,6 @@ using WrathCombo.CustomComboNS.Functions;
 using WrathCombo.Extensions;
 using static WrathCombo.Combos.PvE.SMN.Config;
 using static WrathCombo.CustomComboNS.Functions.CustomComboFunctions;
-// API12: AetherFlags is game-7.5 only; alias dropped. Phoenix/SolarBahamut readiness will be wrong on TC 7.1.
 namespace WrathCombo.Combos.PvE;
 
 internal partial class SMN
@@ -168,8 +167,12 @@ internal partial class SMN
     internal static bool IsAttunedAny => IsIfritAttuned || IsTitanAttuned || IsGarudaAttuned;
     internal static bool IsDreadwyrmTranceReady => !ActionLearned(SummonBahamut) && IsBahamutReady;
     internal static bool IsBahamutReady => !IsPhoenixReady && !IsSolarBahamutReady;
-    // B1: AetherFlags is game-7.5; on TC 7.1 these always return false (never use Phoenix/SolarBahamut path).
-    internal static bool IsPhoenixReady => false;
+    // porting-note(api13): restored 2026-09-02 — SummonerGauge.AetherFlags exists in CS 6966, but its bit
+    // layout (16=PhoenixReady/32/64/128=egi-ready) has no distinct Solar Bahamut bit, unlike upstream's
+    // international Dalamud.Enums.AetherFlags (4/8/12 scheme) this code was written against. Phoenix
+    // readiness restored via the same bit Dalamud's own SMNGauge.IsPhoenixReady uses; Solar Bahamut stays
+    // B1-stubbed — no discriminating bit exists in this CS build to tell it apart from plain Phoenix.
+    internal static bool IsPhoenixReady => Gauge.AetherFlags.HasFlag(FFXIVClientStructs.FFXIV.Client.Game.Gauge.AetherFlags.PhoenixReady);
     internal static bool IsSolarBahamutReady => false;
     internal static bool DemiExists => CurrentDemiSummon is not DemiSummon.None;
     internal static bool DemiNone => CurrentDemiSummon is DemiSummon.None;
